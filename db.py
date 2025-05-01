@@ -1,0 +1,332 @@
+import pymysql
+
+# def dict_factory(cursor, row):
+#     fields = [column[0] for column in cursor.description]
+#     return {key: value for key, value in zip(fields, row)}
+
+class DbUtil:
+    def __init__(self, config):
+        self.config = config 
+
+    def get_connection(self):
+        return pymysql.connect(
+            host=self.config['host'],
+            user=self.config['user'],
+            # password=self.config['password'],
+            db=self.config['db'],
+            cursorclass=pymysql.cursors.Cursor  # or DictCursor if you prefer
+        )
+
+    # DB OPS WITH USERS
+    # Save a new user
+    def save_user(self, name, surname, email, password):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'INSERT INTO users (name, surname, email, password) VALUES (%s, %s, %s, %s)', (name, surname, email, password)
+                ) 
+                con.commit()
+                return c.lastrowid
+        finally:
+            con.close()
+    
+    # Search for a user in the users table
+    def get_user_by_email(self, email):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'SELECT * FROM users WHERE email = %s', (email,)
+                )
+                return c.fetchone()
+        finally:
+            con.close()
+    
+    # DB OPS WITH SITES
+    # Save a new site
+    def save_site(self, name, street, suburb):
+        con = self.get_connection()
+        
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'INSERT INTO sites (name, street, suburb) VALUES (%s, %s, %s)', (name, street, suburb)
+                ) 
+                con.commit()
+                return c.lastrowid
+        finally:
+            con.close()
+    
+    # Get all sites to display on /sites route
+    def get_all_sites(self):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'SELECT * FROM sites;'
+                )
+                rows = c.fetchall()
+                col_names = [c[0] for c in c.description]
+                return [dict(zip(col_names, row)) for row in rows]
+        finally:
+            con.close()
+    
+    # Get a site by name
+    def get_site_by_name(self, name):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'SELECT * FROM sites WHERE name = %s', (name,)
+                )
+                return c.fetchone()
+        finally:
+            con.close()
+
+    # Get a site by id
+    def get_site_by_id(self, id):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'SELECT * FROM sites WHERE id = %s', (id,)
+                )
+                row = c.fetchone()
+                col_names = [c[0] for c in c.description]
+                return dict(zip(col_names, row))
+        finally:
+            con.close()
+    
+    # Edit a site
+    def edit_site(self, id, name, street, suburb):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'UPDATE sites SET name = %s, street = %s, suburb = %s WHERE id = %s', (name, street, suburb, id)
+                )
+                con.commit()
+                print("c.rowcount:", c.rowcount)
+                return c.rowcount
+        finally:
+            con.close()
+    
+    # Delete a site
+    def delete_site(self, site_id):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute("DELETE FROM sites WHERE id = %s", (site_id,))
+                self.con.commit()
+                return c.rowcount > 0
+        except Exception as e:
+            print("DB error:", e)
+            return False
+        finally:
+            con.close()
+
+    #DB ops with products    
+    # Save a new product
+    def save_product(self, name, selling_price, cost_price):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'INSERT INTO products (name, selling_price, cost_price) VALUES (%s, %s, %s)', (name, cost_price, selling_price)
+                ) 
+                con.commit()
+                return c.lastrowid
+        finally:
+            con.close()
+        
+     # Get all products to display on /products route
+    def get_all_products(self):
+        con = self.get_connection()
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'SELECT * FROM products;'
+                )
+                rows = c.fetchall()
+                col_names = [c[0] for c in c.description]
+                return [dict(zip(col_names, row)) for row in rows]
+        finally:
+            con.close()
+    
+    # Get a product by name
+    def get_product_by_name(self, name):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'SELECT * FROM products WHERE name = %s', (name,)
+                )
+                return c.fetchone()
+        finally:
+            con.close()
+    
+    # Get a product by id
+    def get_product_by_id(self, id):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'SELECT * FROM products WHERE id = %s', (id,)
+                )
+                row = c.fetchone()
+                col_names = [c[0] for c in c.description]
+                return dict(zip(col_names, row))
+        finally:
+            con.close()
+    
+    # Edit a product
+    def edit_product(self, id, name, selling_price, cost_price):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'UPDATE products SET name = %s, selling_price = %s, cost_price = %s WHERE id = %s', (name, selling_price, cost_price, id)
+                )
+                con.commit()
+                print("c.rowcount:", c.rowcount)
+                return c.rowcount
+        finally:
+            con.close()
+    
+    # Delete a product
+    def delete_product(self, product_id):
+        con = self.get_connection()
+        
+        try:
+            with con.cursor() as c:
+                c.execute("DELETE FROM products WHERE id = %s", (product_id,))
+                con.commit()
+                return c.rowcount > 0
+        except Exception as e:
+            print("DB error:", e)
+            return False
+        finally:
+            con.close()
+        
+    # DB ops with services
+    # Save a new service
+    def save_service(self, site_id, unit_number, onu_make, onu_model, onu_serial, onu_number, gpon_serial, status, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5gh, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living, product_id, activation_date, comments):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'INSERT INTO services (site_id, unit_number, onu_make, onu_model, onu_serial, onu_number, gpon_serial,status, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5ghz, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living, product_id, activation_date, comments) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)', (site_id, unit_number, onu_make, onu_model, onu_serial, onu_number, gpon_serial,status, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5gh, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living, product_id, activation_date, comments)
+                ) 
+                con.commit()
+                return c.lastrowid
+        finally:
+            con.close()
+    
+    # Get all services to display on /services route
+    def get_all_services(self):
+        con = self.get_connection()
+        try:
+            with con.cursor() as c:
+                c.execute("""
+                    SELECT 
+                        s.*, 
+                        si.name AS site_name, 
+                        p.name AS product_name
+                    FROM services s
+                    JOIN sites si ON s.site_id = si.id
+                    JOIN products p ON s.product_id = p.id
+                """)
+                rows = c.fetchall()
+                col_names = [c[0] for c in c.description]
+                return [dict(zip(col_names, row)) for row in rows]
+        finally:
+            con.close()
+    
+    # Get a service by name
+    def verify_service(self, site_id, unit_number):
+        con = self.get_connection()
+        
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'SELECT * FROM services WHERE site_id = %s AND unit_number = %s', (site_id, unit_number)
+                )
+                return c.rowcount
+        finally:
+            con.close()
+
+    # Delete a service
+    def delete_service(self, service_id):
+        con = self.get_connection()
+        
+        try:
+            with con.cursor() as c:
+                c.execute("DELETE FROM services WHERE id = %s", (service_id,))
+                con.commit()
+                return c.rowcount > 0
+        except Exception as e:
+            print("DB error:", e)
+            return False
+        finally:
+            con.close()
+
+    # Get a service by id
+    def get_service_by_id(self, id):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'SELECT * FROM services WHERE id = %s', (id,)
+                )
+                row = c.fetchone()
+                col_names = [c[0] for c in c.description]
+                return dict(zip(col_names, row))
+        finally:
+            con.close()
+
+    # Edit a service
+    def edit_service(self, service_id, **kwargs):
+        """
+        Edit a service in the database.
+
+        Parameters
+        ----------
+        service_id : int
+            The ID of the service to edit
+        **kwargs : dict
+            The fields to edit and their new values. The fields must be valid
+            columns in the services table.
+
+        Returns
+        -------
+        int
+            The number of rows affected (1 if the update was successful, 0 otherwise)
+        """
+        con = self.get_connection()
+        set_clause = ', '.join([f"{key} = %s" for key in kwargs.keys()])
+        values = list(kwargs.values())
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    f'UPDATE services SET {set_clause} WHERE id = %s',
+                    values + [service_id]
+                )
+                con.commit()
+                return c.rowcount
+        finally:
+            con.close()
