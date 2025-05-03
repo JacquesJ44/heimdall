@@ -200,7 +200,7 @@ class DbUtil:
                     'UPDATE products SET name = %s, selling_price = %s, cost_price = %s WHERE id = %s', (name, selling_price, cost_price, id)
                 )
                 con.commit()
-                print("c.rowcount:", c.rowcount)
+                # print("c.rowcount:", c.rowcount)
                 return c.rowcount
         finally:
             con.close()
@@ -327,6 +327,7 @@ class DbUtil:
                     values + [service_id]
                 )
                 con.commit()
+                # print("c.rowcount:", c.rowcount)
                 return c.rowcount
         finally:
             con.close()

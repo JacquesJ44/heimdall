@@ -3,10 +3,14 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 const Services = () => {
-
-    const [services, setServices] = useState(null);
-
+    
+    const [services, setServices] = useState([]);
+    
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [serviceToDelete, setServiceToDelete] = useState(null);
+
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         axios.get('/services')
@@ -23,8 +27,16 @@ const Services = () => {
     const toggleRow = (index) => {
     setExpandedRow(expandedRow === index ? null : index);
     };
+    
+    const searchableFields = ['site_name', 'unit_number', 'gpon_serial', 'onu_number', 'customer_fullname'];
+    const filteredServices = services.filter(service =>
+        searchableFields.some(field =>
+          (service[field] || '').toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
 
     const handleDelete = async (serviceId) => {
+        setShowModal(false);
 
         try {
             // Make the DELETE request to Flask, including site ID
@@ -48,117 +60,173 @@ const Services = () => {
       };
 
     return ( 
-        <div className="h-screen flex items-center justify-center">
-            {/* <div className="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-200"> */}
-                {/* <div className="card-body"></div> */}
-                    {/* <div className="flex font-sans"> */}
-                        <div className="overflow-x-auto">
-                            <div className="flex justify-end max-w mb-5">
-                                <Link to='/services/addservice' className="btn btn-accent">Add New Service</Link>
-                            </div>
-                            <table className="table table-lg">
-                                <thead>
-                                    <tr>
-                                        <th>Site</th> 
-                                        <th>Unit Number</th>
-                                        <th>GPON Serial</th>
-                                        <th>ONU Number</th>
-                                        <th>Customer Full Name</th>
-                                        <th>Contact Number</th>
-                                        <th>Email</th>
-                                        {/* <th>ONU</th> */}
-                                        {/* <th>ONU Model</th>                                         
-                                        {/* <th>Light Level</th> */}
-                                        {/* <th>PPPoE Username</th> */}
-                                        {/* <th>PPPoE Password</th> */}
-                                        {/* <th>24GHz SSID</th> */}
-                                        {/* <th>24GHz Password</th> */}
-                                        {/* <th>5GHz SSID</th> */}
-                                        {/* <th>5GHz Password</th> */}
-                                        <th>Debit Order Status</th>
-                                        <th>Status</th>
-                                        {/* <th>Fluent Living</th> */}
-                                        {/* <th>Product</th> */}
-                                        {/* <th>Activation Date</th> */}
-                                        <th>Package</th>
-                                        <th>More Actions</th>
-                                    </tr>
-                                </thead> 
-                                <tbody>
-                                {services && services.map((service, index) => (
-                                    <Fragment key={service.id}>
-                                        <tr className="hover">
-                                        <td>{service.site_name}</td>
-                                        <td>{service.unit_number}</td>
-                                        <td>{service.gpon_serial}</td>
-                                        <td>{service.onu_number}</td>
-                                        <td>{service.customer_fullname}</td>
-                                        <td>{service.contact_number}</td>
-                                        <td>{service.email}</td>
-                                        <td>{service.debit_order_status}</td>
-                                        <td>{service.status ? "Active" : "Inactive"}</td>
-                                        <td>{service.product_name}</td>
-                                        <td>
-                                            <details className="dropdown dropdown-left dropdown-end">
-                                            <summary className="m-1 btn ">...</summary>
-                                            <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
-                                                <li><Link to={'/services/editservice/' + service.id}>Edit</Link></li>
-                                                <li><button onClick={() => handleDelete(service.id)}>Delete</button></li>
-                                            </ul>
-                                            </details>
-                                        </td>  
-                                        <td>
-                                            <button
-                                            className="btn btn-sm btn-outline"
-                                            onClick={() => toggleRow(index)}
-                                            >
-                                            {expandedRow === index ? "Hide" : "Details"}
-                                            </button>
-                                        </td>
-                                        </tr>
-                                        {expandedRow === index && (
-                                        <tr>
-                                        <td colSpan="100%">
-                                        <div className="bg-black p-4 rounded">
-                                            <p><strong>ONU Make:</strong> {service.onu_make}</p>
-                                            <p><strong>ONU Model:</strong> {service.onu_model}</p>
-                                            <p><strong>ONU Serial:</strong> {service.onu_serial}</p>
-                                            <p><strong>Light Level:</strong> {service.light_level}</p>
-                                            <p>----------</p>
-                                            <p><strong>PPPoE Username:</strong> {service.pppoe_un}</p>
-                                            <p><strong>PPPoE Password:</strong> {service.pppoe_pw}</p>
-                                            <p><strong>2.4GHz SSID:</strong> {service.ssid_24ghz}</p>
-                                            <p><strong>2.4GHz Password:</strong> {service.password_24ghz}</p>
-                                            <p><strong>5GHz SSID:</strong> {service.ssid_5ghz}</p>
-                                            <p><strong>5GHz Password:</strong> {service.password_5ghz}</p>
-                                            <p>----------</p>
-                                            <p><strong>Fluent Living:</strong> {service.fluent_living ? "Yes" : "No"}</p>
-                                            <p><strong>Activation Date:</strong> {service.activation_date ?
-                                                                                     new Date(service.activation_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) 
-                                                                                    : 'N/A'}</p>
-                                            <p><strong>Comments:</strong> {service.comments}</p>
-                                        </div>
-                                        </td>
-                                        </tr>
-                                        )}
-                                    </Fragment>
-                                    ))}
-                                </tbody>
-                            </table>
-                            {showSuccess && (
-                                <div style={{
-                                padding: '10px',
-                                marginTop: '10px',
-                                backgroundColor: '#d4edda',
-                                color: '#155724',
-                                border: '1px solid #c3e6cb',
-                                borderRadius: '5px'
-                                }}>
-                                ✅ Services deleted successfully!
-                                </div>
+        <div className="min-h-screen bg-base-100 p-4">
+            {/* <div className="max-w-full mx-auto px-4 py-6 border border-red-500"> */}
+                {/* <div className="flex font-sans"> */}
+                    <div className="card w-full shadow-2xl bg-base-200 p-6">
+
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-5 gap-4">
+                        {/* Search Bar with Clear Button */}
+                        <div className="relative w-full sm:max-w-xs">
+                            <input
+                            type="text"
+                            placeholder="Search services..."
+                            className="input input-bordered w-full pr-10"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-800"
+                            >
+                                ✕
+                            </button>
                             )}
                         </div>
-                    {/* </div> */}
+
+                        {/* Add New Service Button */}
+                        <Link to="/services/addservice" className="btn btn-accent w-full sm:w-auto">
+                            Add New Service
+                        </Link>
+                        </div>
+
+                        {/* <div className="flex justify-end mb-5">
+                            <Link to='/services/addservice' className="btn btn-accent">Add New Service</Link>
+                        </div> */}
+                        {/* <div className="w-full overflow-x-auto"> */}
+                        <table className="table w-full text-sm">
+                            <thead>
+                                <tr>
+                                    <th>Site</th> 
+                                    <th>Unit Number</th>
+                                    <th>GPON Serial</th>
+                                    <th>ONU Number</th>
+                                    <th>Customer Full Name</th>
+                                    <th>Contact Number</th>
+                                    <th>Email</th>
+                                    {/* <th>ONU</th> */}
+                                    {/* <th>ONU Model</th>                                         
+                                    {/* <th>Light Level</th> */}
+                                    {/* <th>PPPoE Username</th> */}
+                                    {/* <th>PPPoE Password</th> */}
+                                    {/* <th>24GHz SSID</th> */}
+                                    {/* <th>24GHz Password</th> */}
+                                    {/* <th>5GHz SSID</th> */}
+                                    {/* <th>5GHz Password</th> */}
+                                    <th>Debit Order Status</th>
+                                    <th>Status</th>
+                                    {/* <th>Fluent Living</th> */}
+                                    {/* <th>Product</th> */}
+                                    {/* <th>Activation Date</th> */}
+                                    <th>Package</th>
+                                    <th>Details</th>
+                                    <th>More Actions</th>
+                                </tr>
+                            </thead> 
+                            <tbody>
+                            {filteredServices && filteredServices.map((service, index) => (
+                                <Fragment key={service.id}>
+                                    <tr className="hover">
+                                    <td>{service.site_name}</td>
+                                    <td>{service.unit_number}</td>
+                                    <td>{service.gpon_serial}</td>
+                                    <td>{service.onu_number}</td>
+                                    <td>{service.customer_fullname}</td>
+                                    <td>{service.contact_number}</td>
+                                    <td>{service.email}</td>
+                                    <td>{service.debit_order_status}</td>
+                                    <td>{service.status ? "Active" : "Inactive"}</td>
+                                    <td>{service.product_name}</td>
+                                    
+                                    <td>
+                                        <button
+                                        className="btn btn-sm btn-outline"
+                                        onClick={() => toggleRow(index)}
+                                        >
+                                        {expandedRow === index ? "Hide" : "Details"}
+                                        </button>
+                                    </td>
+
+                                    <td>
+                                        <details className="dropdown dropdown-right dropdown-end">
+                                        <summary className="m-1 btn ">...</summary>
+                                        <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
+                                            <li><Link to={'/services/editservice/' + service.id}>Edit</Link></li>
+                                            <li><button onClick={() => { setShowModal(true); setServiceToDelete(service.id) }}>Delete</button></li>
+                                        </ul>
+                                        </details>
+                                    </td>  
+
+                                    
+                                    </tr>
+                                        {expandedRow === index && (
+                                        <tr>
+                                            <td colSpan="100%">
+                                            <div className="bg-white dark:bg-gray-900 p-4 rounded text-right">
+                                                <p><strong>Site:</strong> {service.site_name}</p>
+                                                <p><strong>Unit Number:</strong> {service.unit_number}</p>
+                                                <p><strong>ONU Make:</strong> {service.onu_make}</p>
+                                                <p><strong>ONU Model:</strong> {service.onu_model}</p>
+                                                <p><strong>ONU Serial:</strong> {service.onu_serial}</p>
+                                                <p><strong>Light Level:</strong> {service.light_level}</p>
+                                                <p>----------</p>
+                                                <p><strong>PPPoE Username:</strong> {service.pppoe_un}</p>
+                                                <p><strong>PPPoE Password:</strong> {service.pppoe_pw}</p>
+                                                <p><strong>2.4GHz SSID:</strong> {service.ssid_24ghz}</p>
+                                                <p><strong>2.4GHz Password:</strong> {service.password_24ghz}</p>
+                                                <p><strong>5GHz SSID:</strong> {service.ssid_5ghz}</p>
+                                                <p><strong>5GHz Password:</strong> {service.password_5ghz}</p>
+                                                <p>----------</p>
+                                                <p><strong>Fluent Living:</strong> {service.fluent_living ? "Yes" : "No"}</p>
+                                                <p><strong>Activation Date:</strong> {service.activation_date ?
+                                                                                            new Date(service.activation_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) 
+                                                                                        : 'N/A'}</p>
+                                                <p><strong>Comments:</strong> {service.comments}</p>
+                                            </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </Fragment>
+                            ))}
+                            </tbody>
+                        </table>
+                        {/* Modal */}
+                        {showModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                        <div className="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 className="text-lg font-semibold mb-4">Are you sure?</h3>
+                            <div className="flex justify-end gap-4">
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="btn btn-accent"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => handleDelete(serviceToDelete)}
+                                className="btn btn-warning"
+                            >
+                                Yes, delete it
+                            </button>
+                            </div>
+                        </div>
+                        </div>
+                    )}
+
+                    {showSuccess && (
+                        <div style={{
+                        padding: '10px',
+                        marginTop: '10px',
+                        backgroundColor: '#d4edda',
+                        color: '#155724',
+                        border: '1px solid #c3e6cb',
+                        borderRadius: '5px'
+                        }}>
+                        ✅ Services deleted successfully!
+                        </div>
+                    )}
+                    </div>
                 {/* </div> */}
             {/* </div> */}
         </div>

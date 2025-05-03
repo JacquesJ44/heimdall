@@ -23,11 +23,11 @@ function App() {
   const [message, setMessage] = useState('');
 
   return (
-    // <div data-theme="cupcake">
     <BrowserRouter>
-      {/* <div className="App"> */}
+      <div className="min-h-screen flex flex-col bg-base-200">
         <Navbar token={token} setToken={setToken} message={message} setMessage={setMessage}/>
-        {/* <div className="App-header"> */}
+
+        <main className="flex-grow flex items-center justify-center">
           <Routes>
             <Route path='/' element={ token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
             <Route path="/login" element={<Login setToken={setToken} />} />
@@ -77,10 +77,9 @@ function App() {
                               <EditService />
                             </PrivateRoute>}/> 
           </Routes>
-        {/* </div> */}
-      {/* </div> */}
+        </main>
+      </div>
     </BrowserRouter>
-    // </div>
   );
 }
 
