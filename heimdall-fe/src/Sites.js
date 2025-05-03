@@ -7,6 +7,8 @@ const Sites = () => {
     const [sites, setSites] = useState(null);
 
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [siteToDelete, setSiteToDelete] = useState(null);
 
     useEffect(() => {
         axios.get('/sites')
@@ -20,6 +22,7 @@ const Sites = () => {
       }, []);
 
     const handleDelete = async (siteId) => {
+        setShowModal(false);
 
         try {
             // Make the DELETE request to Flask, including site ID
@@ -37,8 +40,8 @@ const Sites = () => {
           setShowSuccess(false);
           }, 1500);
         } catch (err) {
-          console.error('Could not delete site', err);
-          alert('Could not delete site.');
+          console.error('Cannot delete - Live service using this site', err);
+          alert('Cannot delete - Live service using this site');
         }
       };
 
@@ -51,7 +54,7 @@ const Sites = () => {
                             <div className="flex justify-end max-w mb-5">
                                 <Link to='/sites/addsite' className="btn btn-accent">Add New Site</Link>
                             </div>
-                            <table className="table table-lg">
+                            <table className="table table-full text-sm">
                                 <thead>
                                     <tr>
                                         <th>Name</th> 
@@ -67,11 +70,11 @@ const Sites = () => {
                                             <td>{site.street}</td>
                                             <td>{site.suburb}</td>
                                             <td>
-                                                <details className="dropdown dropdown-left dropdown-end">
+                                                <details className="dropdown dropdown-right dropdown-end">
                                                 <summary className="m-1 btn ">...</summary>
                                                 <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
                                                     <li><Link to={'/sites/editsite/' + site.id}>Edit</Link></li>
-                                                    <li><button onClick={() => handleDelete(site.id)}>Delete</button></li>
+                                                    <li><button onClick={() => { setShowModal(true); setSiteToDelete(site.id) }}>Delete</button></li>
                                                 </ul>
                                                 </details>
                                             </td>    
@@ -79,6 +82,27 @@ const Sites = () => {
                                     ))}
                                 </tbody>
                             </table>
+                            {showModal && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                            <div className="bg-white p-6 rounded-lg shadow-lg">
+                                <h3 className="text-lg font-semibold mb-4">Are you sure?</h3>
+                                <div className="flex justify-end gap-4">
+                                <button
+                                    onClick={() => setShowModal(false)}
+                                    className="btn btn-accent"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(siteToDelete)}
+                                    className="btn btn-warning"
+                                >
+                                    Yes, delete it
+                                </button>
+                                </div>
+                            </div>
+                            </div>
+                        )}
                             {showSuccess && (
                                 <div style={{
                                 padding: '10px',

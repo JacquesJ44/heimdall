@@ -18,7 +18,7 @@ const EditProduct = () => {
         axios.get(`/products/editproduct/${id}`)
           .then(response => {
             const data = response.data;
-            console.log(data);
+            // console.log(data);
             setName(data.name);
             setSelling_price(data.selling_price);
             setCost_price(data.cost_price);
@@ -32,7 +32,7 @@ const EditProduct = () => {
         e.preventDefault();
         try {
           const response = await axios.put(`/products/editproduct/${id}`, { name, cost_price, selling_price });
-          console.log(response);
+        //   console.log(response);
           setShowSuccess(true);
           // Wait 1.5 seconds before reloading
           setTimeout(() => {

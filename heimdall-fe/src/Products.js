@@ -7,6 +7,8 @@ const Products = () => {
     const [products, setProducts] = useState(null);
 
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [productToDelete, setProductToDelete] = useState(null);
 
     useEffect(() => {
         axios.get('/products')
@@ -20,6 +22,7 @@ const Products = () => {
       }, []);
 
     const handleDelete = async (productId) => {
+        setShowModal(false);
 
         try {
             // Make the DELETE request to Flask, including site ID
@@ -37,8 +40,8 @@ const Products = () => {
           setShowSuccess(false);
           }, 1500);
         } catch (err) {
-          console.error('Could not delete product', err);
-          alert('Could not delete product.');
+          console.error('Cannot delete - Live service using this product', err);
+          alert('Cannot delete - Live service using this product');
         }
       };
 
@@ -51,7 +54,7 @@ const Products = () => {
                             <div className="flex justify-end max-w mb-5">
                                 <Link to='/products/addproduct' className="btn btn-accent">Add New Product</Link>
                             </div>
-                            <table className="table table-lg">
+                            <table className="table table-full text-sm">
                             {/* <table className="flex-auto table-auto border-collapse my-10"> */}
                                 <thead>
                                     <tr>
@@ -68,11 +71,11 @@ const Products = () => {
                                             <td>{product.selling_price}</td>
                                             <td>{product.cost_price}</td>
                                             <td>
-                                                <details className="dropdown dropdown-left dropdown-end">
+                                                <details className="dropdown dropdown-right dropdown-end">
                                                 <summary className="m-1 btn ">...</summary>
                                                 <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
                                                     <li><Link to={'/products/editproduct/' + product.id}>Edit</Link></li>
-                                                    <li><button onClick={() => handleDelete(product.id)}>Delete</button></li>
+                                                    <li><button onClick={() => { setShowModal(true); setProductToDelete(product.id) }}>Delete</button></li>
                                                 </ul>
                                                 </details>
                                             </td>    
@@ -80,18 +83,39 @@ const Products = () => {
                                     ))}
                                 </tbody>
                             </table>
-                            {showSuccess && (
-                                <div style={{
-                                padding: '10px',
-                                marginTop: '10px',
-                                backgroundColor: '#d4edda',
-                                color: '#155724',
-                                border: '1px solid #c3e6cb',
-                                borderRadius: '5px'
-                                }}>
-                                ✅ Site deleted successfully!
+                            {showModal && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                            <div className="bg-white p-6 rounded-lg shadow-lg">
+                                <h3 className="text-lg font-semibold mb-4">Are you sure?</h3>
+                                <div className="flex justify-end gap-4">
+                                <button
+                                    onClick={() => setShowModal(false)}
+                                    className="btn btn-accent"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(productToDelete)}
+                                    className="btn btn-warning"
+                                >
+                                    Yes, delete it
+                                </button>
                                 </div>
-                            )}
+                            </div>
+                            </div>
+                        )}
+                        {showSuccess && (
+                            <div style={{
+                            padding: '10px',
+                            marginTop: '10px',
+                            backgroundColor: '#d4edda',
+                            color: '#155724',
+                            border: '1px solid #c3e6cb',
+                            borderRadius: '5px'
+                            }}>
+                            ✅ Site deleted successfully!
+                            </div>
+                        )}
                         </div>
                     {/* </div> */}
                 {/* </div> */}

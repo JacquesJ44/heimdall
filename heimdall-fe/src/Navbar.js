@@ -9,7 +9,7 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
 
     useEffect(() => {
       const storedToken = localStorage.getItem('token');
-      console.log('Navbar useEffect — token:', storedToken);
+      // console.log('Navbar useEffect — token:', storedToken);
 
       if (!storedToken) {
         setMessage("No token found")
@@ -51,7 +51,7 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
       };
 
   return (
-    <div className="navbar fixed top-0 shadow-2xl bg-base-200 roundedborders">
+    <div className="navbar sticky top-0 shadow-2xl bg-base-200 roundedborders">
       <div className="flex-1">
         <img src={logo} className="App-logo" alt="logo" />
       </div>

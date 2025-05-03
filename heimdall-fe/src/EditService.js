@@ -92,7 +92,7 @@ const EditService = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-          const response = await axios.put(`/services/editservice/${id}`, { site_id, unit_number, onu_make, onu_model, onu_serial, gpon_serial, onu_number, status, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5ghz, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living, activation_date: status ? activation_date: null, comments, product_id });
+          const response = await axios.put(`/services/editservice/${id}`, { site_id, unit_number, onu_make, onu_model, onu_serial, gpon_serial, onu_number, status: status ? status : 0, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5ghz, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living: fluent_living ? fluent_living : 0, activation_date: status === true ? activation_date : null, comments, product_id });
         //   console.log(response);
           // Check for successful update or no changes made
         if (response.status === 404) {

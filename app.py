@@ -3,6 +3,9 @@ from flask_cors import CORS
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, unset_jwt_cookies, jwt_required, JWTManager
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
+from datetime import datetime
+import hashlib
+import binascii
 import pymysql
 import json
 import os
@@ -26,10 +29,10 @@ cur = con.cursor()
 cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INT(5) PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(20),
-        surname VARCHAR(20),
+        name VARCHAR(50),
+        surname VARCHAR(50),
         email VARCHAR(50) UNIQUE,
-        password VARCHAR(20)
+        password VARCHAR(200)
     )
  """)
 
@@ -45,7 +48,7 @@ cur.execute("""
 cur.execute("""
     CREATE TABLE IF NOT EXISTS products (
         id INT(5) PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(20),
+        name VARCHAR(50) UNIQUE,
         selling_price DECIMAL(5,2),
         cost_price DECIMAL(5,2)
     )
@@ -56,23 +59,23 @@ cur.execute("""
         id INT(5) PRIMARY KEY AUTO_INCREMENT,
         site_id INT(5),
         unit_number VARCHAR(25),
-        onu_make VARCHAR(25),
-        onu_model VARCHAR(25),
-        onu_serial VARCHAR(25),
+        onu_make VARCHAR(50),
+        onu_model VARCHAR(50),
+        onu_serial VARCHAR(50),
         onu_number VARCHAR(20),
-        gpon_serial VARCHAR(25),
+        gpon_serial VARCHAR(50),
         status BOOLEAN,
         light_level VARCHAR(10),
-        pppoe_un VARCHAR(15),
-        pppoe_pw VARCHAR(15),
-        ssid_24ghz VARCHAR(25),
-        password_24ghz VARCHAR(25),
-        ssid_5ghz VARCHAR(25),
-        password_5ghz VARCHAR(25),
-        customer_fullname VARCHAR(50),
+        pppoe_un VARCHAR(20),
+        pppoe_pw VARCHAR(20),
+        ssid_24ghz VARCHAR(50),
+        password_24ghz VARCHAR(50),
+        ssid_5ghz VARCHAR(50),
+        password_5ghz VARCHAR(50),
+        customer_fullname VARCHAR(100),
         contact_number VARCHAR(50),
-        email VARCHAR(50),
-        debit_order_status VARCHAR(25),
+        email VARCHAR(100),
+        debit_order_status VARCHAR(50),
         fluent_living BOOLEAN,
         product_id INT(5),
         activation_date DATE,
@@ -83,6 +86,27 @@ cur.execute("""
 """)           
          
 con.close()
+
+# Hash the password
+def hash_password(password):
+    salt = hashlib.sha256(os.urandom(60)).hexdigest().encode('ascii')
+    pwdhash = hashlib.pbkdf2_hmac('sha512', password.encode('utf-8'), salt, 100000)
+    pwdhash = binascii.hexlify(pwdhash)
+    return (salt + pwdhash).decode('ascii')
+
+def verify_password(stored_password, provided_password):
+    # Extract the salt from the stored password (first 64 characters = 32 bytes = 64 hex chars)
+    salt = stored_password[:64].encode('ascii')
+    
+    # Extract the actual hash from the stored password
+    stored_pwdhash = stored_password[64:]
+    
+    # Recompute the hash using the provided password and the same salt
+    pwdhash = hashlib.pbkdf2_hmac('sha512', provided_password.encode('utf-8'), salt, 100000)
+    pwdhash = binascii.hexlify(pwdhash).decode('ascii')
+    
+    # Compare the hashes
+    return pwdhash == stored_pwdhash
 
 # Function to refresh JWT
 @app.after_request
@@ -113,7 +137,7 @@ def login():
     if not row:
        return jsonify({"msg": "User with this email does not exist"}), 400
 
-    if data['password'] != row[4]:
+    if not verify_password(row[4], data['password']):
         return jsonify({"msg": "Invalid credentials"}), 401
 
     access_token = create_access_token(identity=data['email'])
@@ -131,7 +155,8 @@ def register():
     if data['password'] != data['confirmPassword']:
         return jsonify({"msg": "Passwords do not match"}), 400
     
-    db.save_user(data['name'], data['surname'], data['email'], data['password'])
+    secured_password = hash_password(data['password'])
+    db.save_user(data['name'], data['surname'], data['email'], secured_password)
 
     return jsonify({"msg": "Registration successful"})
 
@@ -247,7 +272,7 @@ def edit_product(product_id):
 
     if request.method == "PUT":
         data = request.get_json()
-        print(data)
+        # print(data)
 
     # Validate cost_price and selling_price
     try:
@@ -302,7 +327,13 @@ def add_service():
         return jsonify({"msg": "Database error while verifying service."}), 500
 
     if existing_service:
-        return jsonify({"msg": "Service already exists!"}), 400
+        return jsonify({"msg": "Service already exists in this unit!"}), 400
+    
+    activation_date_str = data.get('activation_date')
+    if activation_date_str:
+        activation_date = datetime.strptime(activation_date_str, '%Y-%m-%d').date()
+    else:
+        activation_date = None
 
     # Save the service
     try:
@@ -312,8 +343,7 @@ def add_service():
             data['pppoe_un'], data['pppoe_pw'], data['ssid_24ghz'], data['password_24ghz'],
             data['ssid_5ghz'], data['password_5ghz'], data['customer_fullname'],
             data['contact_number'], data['email'], data['debit_order_status'],
-            data['fluent_living'], data['product_id'], data['activation_date'],
-            data['comments']
+            data['fluent_living'], data['product_id'], activation_date, data['comments']
         )
     except Exception as e:
         print(f"DB error during save: {e}")
@@ -326,7 +356,11 @@ def add_service():
 def edit_service(service_id):
     if request.method == "GET":
         data = db.get_service_by_id(service_id)
-        # print(data)
+
+        # Strip the date from the backend into just the date
+        if data['activation_date']:
+            data['activation_date'] = data['activation_date'].strftime('%Y-%m-%d')
+        
         if data:
             return jsonify(data)
         return jsonify({'error': 'Site not found'}), 404
