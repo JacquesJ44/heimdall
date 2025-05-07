@@ -13,7 +13,7 @@ import os
 from db import DbUtil
 db = DbUtil({
     'host': 'localhost',
-    'user': 'root',
+    'user': 'pi',
     'db': 'heimdall'
 })
 
@@ -428,4 +428,4 @@ def navbar():
 
 if __name__ == '__main__':
     CORS(app, supports_credentials=True, resource={r"/*": {"origins": "*"}})
-    app.run(debug=True)
+    app.run()
