@@ -127,13 +127,12 @@ def refresh_expiring_jwts(response):
         return response
 
 #Login route 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET','POST'])
 def login():
     data = request.get_json()
     # print(data)
     
     row = db.get_user_by_email(data['email'])
-    
     if not row:
        return jsonify({"msg": "User with this email does not exist"}), 400
 
@@ -389,6 +388,8 @@ def delete_service():
         return jsonify({'message': 'Site deleted successfully'}), 200
     else:
         return jsonify({'error': 'Site not found or failed to delete'}), 404
+    
+
 
 #Logout route
 @app.route("/logout", methods=["POST"])
@@ -397,10 +398,26 @@ def logout():
     unset_jwt_cookies(response)
     return response
 
+
+# Dashboard Route - for displaying pie chart data
 @app.route("/dashboard", methods=["GET"])
 def dashboard():
-    print("THIS IS DASHBOARD")
-    return '-' 
+    x = db.pie_chart_data()
+    # print(x)
+
+    chart_data = {}
+
+    for row in x:
+        site = row['site_name']
+        if site not in chart_data:
+            chart_data[site] = []
+        chart_data[site].append({
+            "package": row["package_name"],
+            "value": row["value"]
+        })
+
+    # print(chart_data)
+    return jsonify(chart_data)
 
 @app.route("/navbar")
 @jwt_required()

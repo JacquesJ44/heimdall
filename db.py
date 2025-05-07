@@ -331,3 +331,23 @@ class DbUtil:
                 return c.rowcount
         finally:
             con.close()
+
+    def pie_chart_data(self):
+        con = self.get_connection()
+        try:
+            with con.cursor() as c:
+                c.execute("""
+                    SELECT 
+                        sites.name AS site_name,
+                        products.name AS package_name,
+                        COUNT(*) AS value
+                    FROM services
+                    JOIN sites ON services.site_id = sites.id
+                    JOIN products ON services.product_id = products.id
+                    GROUP BY sites.name, products.name
+                """)
+                rows = c.fetchall()
+                col_names = [c[0] for c in c.description]
+                return [dict(zip(col_names, row)) for row in rows]
+        finally:
+            con.close()
