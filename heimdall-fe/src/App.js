@@ -28,7 +28,7 @@ function App() {
         <Navbar token={token} setToken={setToken} message={message} setMessage={setMessage}/>
 
         <main className="flex-grow flex items-center justify-center">
-          <Routes>
+          <Routes> 
             <Route path='/' element={ token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
             <Route path="/login" element={<Login setToken={setToken} />} />
             {/* <Route path="/logout" element={<Logout />} /> */}
