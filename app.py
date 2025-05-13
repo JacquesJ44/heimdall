@@ -547,7 +547,7 @@ def fluent_living(site):
     site = unquote(site)
     services = db.get_fluent_living(site)
 
-    pprint(services)
+    #pprint(services)
     return jsonify(services)
 
 
