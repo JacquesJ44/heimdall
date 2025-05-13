@@ -6,6 +6,7 @@ import PrivateRoute from './PrivateRoute';
 import Navbar from './Navbar'
 import Login from './Login'
 import Dashboard from './Dashboard';
+import DashboardSite from './DashboardSite';
 import Register from './Register'
 import Sites from './Sites';
 import AddSite from './AddSite';
@@ -36,6 +37,10 @@ function App() {
                     element={<PrivateRoute>
                               <Dashboard />
                             </PrivateRoute>}/>
+            <Route path="/dashboard/site/:id"
+                    element={<PrivateRoute>
+                              <DashboardSite />
+                            </PrivateRoute>} />
             <Route path="/register" 
                     element={<PrivateRoute>
                               <Register />
