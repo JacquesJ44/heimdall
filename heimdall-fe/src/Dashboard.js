@@ -1,13 +1,14 @@
 import { useState,useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CF1', '#FF6699'];
 
   
-const Dashboard = ({ }) => {
+const Dashboard = () => {
 
-  const [message, setMessage] = useState('');
+  // const { id } = useParams();
 
   const [data, setData] = useState([]);
 
@@ -15,15 +16,12 @@ const Dashboard = ({ }) => {
     axios.get('/dashboard')
     .then(response => {
       setData(response.data);
-      console.log(response.data);
+      // console.log(response.data);
     })
     .catch(error => {
       console.error('Error fetching data:', error);
     });
-}, []);
-
-
-  
+  }, []);
 
   return (
 <> 
@@ -33,7 +31,9 @@ const Dashboard = ({ }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-20" >
           {Object.entries(data).map(([site, data], idx) => (
             <div key={site} style={{ marginBottom: '40px' }}>
-              <h3><strong>{site}</strong></h3>
+              <strong>
+                <Link to={`/dashboard/site/${encodeURIComponent(site)}`}>{site}</Link>
+              </strong>
               <PieChart width={400} height={400}>
                 <Pie
                   dataKey="value"
