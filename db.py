@@ -351,3 +351,56 @@ class DbUtil:
                 return [dict(zip(col_names, row)) for row in rows]
         finally:
             con.close()
+
+    def services_per_site(self, site):
+        con = self.get_connection()
+        try:
+            with con.cursor() as c:
+                c.execute("""
+                     SELECT 
+                        s.id,
+                        si.name AS site_name,
+                        p.name AS package,
+                        p.cost_price,
+                        p.selling_price,
+                        s.status,
+                        s.unit_number,
+                        s.activation_date
+                    FROM services s
+                    JOIN sites si ON s.site_id = si.id
+                    JOIN products p ON s.product_id = p.id
+                    WHERE si.name = %s      
+                """, (site,))
+    
+                rows = c.fetchall()
+                # print("Query result:", rows)
+                col_names = [c[0] for c in c.description]
+                return [dict(zip(col_names, row)) for row in rows]
+        finally:
+            con.close()
+
+    def get_fluent_living(self, site):
+        con = self.get_connection()
+        try:
+            with con.cursor() as c:
+                c.execute("""
+                    SELECT 
+                        si.name AS site_name, 
+                        p.name AS package,
+                        s.unit_number,
+                        s.customer_fullname,
+                        s.ssid_24ghz,
+                        s.password_24ghz,
+                        s.ssid_5ghz,
+                        s.password_5ghz
+                    FROM services s
+                    JOIN sites si ON s.site_id = si.id
+                    JOIN products p ON s.product_id = p.id
+                    WHERE s.fluent_living = 1 AND si.name = %s
+                    """, (site,))
+                rows = c.fetchall()
+                # print("Query result:", rows)
+                col_names = [c[0] for c in c.description]
+                return [dict(zip(col_names, row)) for row in rows]
+        finally:
+            con.close()

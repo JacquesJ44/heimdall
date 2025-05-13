@@ -3,12 +3,17 @@ from flask_cors import CORS
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, unset_jwt_cookies, jwt_required, JWTManager
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
-from datetime import datetime
+from datetime import datetime, date
+from collections import defaultdict
+from calendar import monthrange
 import hashlib
 import binascii
 import pymysql
 import json
 import os
+
+from pprint import pprint
+from urllib.parse import unquote
 
 from db import DbUtil
 db = DbUtil({
@@ -388,22 +393,11 @@ def delete_service():
         return jsonify({'message': 'Site deleted successfully'}), 200
     else:
         return jsonify({'error': 'Site not found or failed to delete'}), 404
-    
-
-
-#Logout route
-@app.route("/logout", methods=["POST"])
-def logout():
-    response = jsonify({"msg": "logout successful"})
-    unset_jwt_cookies(response)
-    return response
-
 
 # Dashboard Route - for displaying pie chart data
 @app.route("/dashboard", methods=["GET"])
 def dashboard():
     x = db.pie_chart_data()
-    # print(x)
 
     chart_data = {}
 
@@ -415,9 +409,154 @@ def dashboard():
             "package": row["package_name"],
             "value": row["value"]
         })
-
-    # print(chart_data)
+    # print("CHART DATA:")
+    # pprint(chart_data)
     return jsonify(chart_data)
+
+# Drill into a site from the dashboard
+@app.route("/dashboard/site/<string:site>", methods=["GET"])
+def dashboard_site(site):
+    site = unquote(site) # Decode the site name
+
+    x = db.services_per_site(site)
+    # print("DATA:")
+    # pprint(x)
+
+    total = len(x)
+    active_units = [u for u in x if u['status'] == 1]
+    total_active = len(active_units)
+    total_selling = sum(u['selling_price'] for u in active_units if u['selling_price'] is not None)
+
+    return jsonify({
+        "total": total,
+        "active": total_active,
+        "total_selling": total_selling,
+        "units": x
+    })
+
+# Route for calculating of active services in the current month
+@app.route("/dashboard/site/<string:site>/po", methods=["GET"])
+def calculate_po(site):
+    site = unquote(site)
+    services = db.services_per_site(site)
+
+    now = datetime.now()
+    current_year = now.year
+    current_month = now.month
+
+    # Group by package
+    package_summary = defaultdict(lambda: {"count": 0, "cost_price": 0})
+
+    for s in services:
+        if s["status"] == 1 and s["package"]:  # only active services with valid packages
+            activation_date = s.get("activation_date")
+            # print(f"{activation_date=}, {activation_date.year=}, {activation_date.month=}")
+
+            # Skip if activation_date is None or not a datetime
+            if not activation_date or not isinstance(activation_date, (datetime, date)):
+                continue
+
+            # Skip if the activation date is in the current month
+            if activation_date.year == current_year and activation_date.month == current_month:
+                continue
+            
+
+            key = s["package"]
+            package_summary[key]["count"] += 1
+            package_summary[key]["cost_price"] = s["cost_price"]  # assumed to be consistent
+
+    # Build response list
+    result = []
+    for package, data in package_summary.items():
+        count = data["count"]
+        cost_price = data["cost_price"]
+        total = round(count * cost_price, 2)
+        result.append({
+            "package": package,
+            "count": count,
+            "cost_price": cost_price,
+            "total": total
+        })
+
+    # pprint(result)
+    return jsonify(result)
+
+# Calulate prorata rates for the services in the previous month
+@app.route("/dashboard/site/<string:site>/prorata", methods=["GET"])
+def calculate_prorata(site):
+    site = unquote(site)
+    services = db.services_per_site(site)
+
+    now = datetime.now()
+    current_year = now.year
+    current_month = now.month
+
+    # Get previous month and year
+    if current_month == 1:
+        prev_month = 12
+        prev_year = current_year - 1
+    else:
+        prev_month = current_month - 1
+        prev_year = current_year
+
+    # Total days in previous month
+    days_in_prev_month = monthrange(prev_year, prev_month)[1]
+    start_of_prev_month = datetime(prev_year, prev_month, 1)
+    end_of_prev_month = datetime(prev_year, prev_month, days_in_prev_month)
+
+    prorata_services = []
+
+    for s in services:
+        activation_date = s.get("activation_date")
+        cost_price = s.get("cost_price")
+        package = s.get("package")
+
+        if s["status"] != 1 or not activation_date or not package:
+            continue
+
+        # Parse date safely
+        if isinstance(activation_date, datetime):
+            activation_dt = activation_date
+        else:
+            try:
+                activation_dt = datetime.strptime(str(activation_date), "%Y-%m-%d")
+            except Exception:
+                continue
+
+        # ✅ Only include services activated in the previous month
+        if activation_dt.year != prev_year or activation_dt.month != prev_month:
+            continue
+
+        active_days = (end_of_prev_month - activation_dt).days + 1
+        prorata = round((active_days / days_in_prev_month) * float(cost_price), 2)
+
+        prorata_services.append({
+            "unit": s["unit_number"],
+            "package": package,
+            "activation_date": activation_dt.strftime("%d %b %Y"),
+            "cost_price": cost_price,
+            "active_days": active_days,
+            "prorata_amount": prorata,
+        })
+
+    # pprint(prorata_services)
+    return jsonify(prorata_services)
+
+@app.route("/dashboard/site/<string:site>/fluent_living", methods=["GET"])
+def fluent_living(site):
+    site = unquote(site)
+    services = db.get_fluent_living(site)
+
+    pprint(services)
+    return jsonify(services)
+
+
+#Logout route
+@app.route("/logout", methods=["POST"])
+def logout():
+    response = jsonify({"msg": "logout successful"})
+    unset_jwt_cookies(response)
+    return response
 
 @app.route("/navbar")
 @jwt_required()
