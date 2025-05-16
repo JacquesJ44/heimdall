@@ -1,9 +1,9 @@
 // components/UnitTable.jsx
 const UnitTable = ({ units }) => (
   <div className="mt-4 overflow-x-auto">
-    <table className="min-w-full bg-white rounded-2xl shadow">
+    <table className="min-w-full bg-white dark:bg-gray-900 rounded-2xl shadow">
       <thead>
-        <tr className="bg-gray-100 text-left">
+        <tr className="bg-gray-100 dark:bg-gray-900 text-left">
           <th className="p-3">Unit</th>
           <th className="p-3">Package</th>
           <th className="p-3">Amount</th>
