@@ -1,10 +1,7 @@
 import axios from './AxiosInstance'
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import logo from './logo.png';
-import twiddle from './twiddle.jpg';
-import eagle_capture from './eagle_capture.PNG';
-import background from './background.png';
+import aesirblue from './aesirblue.png';
 
 const Navbar = ({ token, setToken, message, setMessage }) => {
   
@@ -62,7 +59,7 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
         // backgroundPosition: 'center',
       }}> */}
       <div className="flex-1">
-        <img src={eagle_capture} className="App-logo" alt="logo" />
+        <img src={aesirblue} className="App-logo" alt="logo" />
       </div>
 
       <div className="flex-none">

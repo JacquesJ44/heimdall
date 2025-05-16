@@ -9,9 +9,9 @@ const POTable = ({ data }) => {
 
   return (
     <div className="mt-6 overflow-x-auto">
-      <table className="min-w-full bg-white rounded-2xl shadow">
+      <table className="min-w-full bg-white dark:bg-gray-900 rounded-2xl shadow">
         <thead>
-          <tr className="bg-gray-100 text-left">
+          <tr className="bg-gray-100 dark:bg-gray-900 text-left">
             <th className="p-3">Package</th>
             <th className="p-3">Service Count</th>
             <th className="p-3">Cost per Service</th>
@@ -27,7 +27,7 @@ const POTable = ({ data }) => {
               <td className="p-3">R {row.total}</td>
             </tr>
           ))}
-          <tr className="border-t font-semibold bg-gray-50">
+          <tr className="border-t font-semibold bg-gray-50 dark:bg-gray-900">
             <td className="p-3" colSpan="3">Total</td>
             <td className="p-3">R {totalAmount.toFixed(2)}</td>
           </tr>

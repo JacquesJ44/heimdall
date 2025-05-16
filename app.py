@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, unset_jwt_cookies, jwt_required, JWTManager
 from datetime import datetime, timedelta, timezone
@@ -22,7 +22,8 @@ db = DbUtil({
     'db': 'heimdall'
 })
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="heimdall-fe/build", static_url_path="/") # Path to your React build folder
+    
 
 app.config['SECRET_KEY'] = os.urandom(12).hex()
 app.config['JWT_SECRET_KEY'] = 'idjfehoHkhK#54kk5k2$kjhfe'
@@ -132,8 +133,12 @@ def refresh_expiring_jwts(response):
         return response
 
 #Login route 
-@app.route('/login', methods=['GET','POST'])
+@app.route('/login', methods=['POST'])
 def login():
+
+    if not request.is_json:
+        return jsonify({"msg": "Invalid request: JSON required"}), 400
+    
     data = request.get_json()
     # print(data)
     
@@ -564,6 +569,15 @@ def navbar():
     current_user = get_jwt_identity()
     # print('current_user: ', current_user)
     return jsonify(logged_in_as=current_user)
+
+# This route will serve the React app - to avoid the browser return json output upon a refresh
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve(path):
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, "index.html")
 
 if __name__ == '__main__':
     CORS(app, supports_credentials=True, resource={r"/*": {"origins": "*"}})
