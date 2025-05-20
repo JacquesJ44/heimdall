@@ -11,7 +11,7 @@ const Products = () => {
     const [productToDelete, setProductToDelete] = useState(null);
 
     useEffect(() => {
-        axios.get('/products')
+        axios.get('/api/products')
           .then(response => {
             setProducts(response.data);
             // console.log(response.data);
@@ -26,7 +26,7 @@ const Products = () => {
 
         try {
             // Make the DELETE request to Flask, including site ID
-            await axios.delete('/products/deleteproduct', {
+            await axios.delete('/api/products/deleteproduct', {
             data: { id: productId }, // sending ?id=123
       });
           // Show success message
@@ -49,7 +49,7 @@ const Products = () => {
         <div className="min-h-screen bg-base-100 p-4">
             <div className="card w-full shadow-2xl bg-base-200 p-6">
                     <div className="flex justify-end max-w mb-5">
-                        <Link to='/products/addproduct' className="btn btn-accent">Add New Product</Link>
+                        <Link to='/api/products/addproduct' className="btn btn-accent">Add New Product</Link>
                     </div>
                     <table className="table table-full text-sm">
                         <thead>
@@ -70,7 +70,7 @@ const Products = () => {
                                         <details className="dropdown dropdown-right dropdown-end">
                                         <summary className="m-1 btn ">...</summary>
                                         <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
-                                            <li><Link to={'/products/editproduct/' + product.id}>Edit</Link></li>
+                                            <li><Link to={'/api/products/editproduct/' + product.id}>Edit</Link></li>
                                             <li><button onClick={() => { setShowModal(true); setProductToDelete(product.id) }}>Delete</button></li>
                                         </ul>
                                         </details>

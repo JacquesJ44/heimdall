@@ -13,7 +13,7 @@ const Dashboard = () => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    axios.get('/dashboard')
+    axios.get('/api/dashboard')
     .then(response => {
       setData(response.data);
       // console.log(response.data);
@@ -32,7 +32,7 @@ const Dashboard = () => {
           {Object.entries(data).map(([site, data], idx) => (
             <div key={site} style={{ marginBottom: '40px' }}>
               <strong>
-                <Link to={`/dashboard/site/${encodeURIComponent(site)}`}>{site}</Link>
+                <Link to={`/api/dashboard/site/${encodeURIComponent(site)}`}>{site}</Link>
               </strong>
               <PieChart width={400} height={400}>
                 <Pie

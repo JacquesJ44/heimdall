@@ -16,7 +16,7 @@ const EditSite = () => {
     let navigate = useNavigate()
 
     useEffect(() => {
-        axios.get(`/sites/editsite/${id}`)
+        axios.get(`/api/sites/editsite/${id}`)
           .then(response => {
             const data = response.data;
             // console.log(data);
@@ -32,7 +32,7 @@ const EditSite = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-          const response = await axios.put(`/sites/editsite/${id}`, { name, street, suburb });
+          const response = await axios.put(`/api/sites/editsite/${id}`, { name, street, suburb });
           console.log(response);
           setShowSuccess(true);
           // Wait 1.5 seconds before reloading

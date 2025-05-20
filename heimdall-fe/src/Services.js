@@ -13,7 +13,7 @@ const Services = () => {
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
-        axios.get('/services')
+        axios.get('/api/services')
           .then(response => {
             setServices(response.data);
             // console.log(response.data);
@@ -40,7 +40,7 @@ const Services = () => {
 
         try {
             // Make the DELETE request to Flask, including site ID
-            await axios.delete('/services/deleteservice', {
+            await axios.delete('/api/services/deleteservice', {
             data: { id: serviceId }, // sending ?id=123
       });
           // Show success message
@@ -84,7 +84,7 @@ const Services = () => {
                     </div>
 
                     {/* Add New Service Button */}
-                    <Link to="/services/addservice" className="btn btn-accent w-full sm:w-auto">
+                    <Link to="/api/services/addservice" className="btn btn-accent w-full sm:w-auto">
                         Add New Service
                     </Link>
                 </div>
@@ -144,7 +144,7 @@ const Services = () => {
                                 <details className="dropdown dropdown-right dropdown-end">
                                 <summary className="m-1 btn ">...</summary>
                                 <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
-                                    <li><Link to={'/services/editservice/' + service.id}>Edit</Link></li>
+                                    <li><Link to={'/api/services/editservice/' + service.id}>Edit</Link></li>
                                     <li><button onClick={() => { setShowModal(true); setServiceToDelete(service.id) }}>Delete</button></li>
                                 </ul>
                                 </details>
