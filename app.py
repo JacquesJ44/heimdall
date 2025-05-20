@@ -18,7 +18,7 @@ from urllib.parse import unquote
 from db import DbUtil
 db = DbUtil({
     'host': 'localhost',
-    'user': 'root',
+    'user': 'pi',
     'db': 'heimdall'
 })
 
@@ -30,7 +30,7 @@ app.config['JWT_SECRET_KEY'] = 'idjfehoHkhK#54kk5k2$kjhfe'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
 jwt = JWTManager(app)
 
-con = pymysql.connect(host='localhost', user='root', database='heimdall')
+con = pymysql.connect(host='localhost', user='pi', database='heimdall')
 cur = con.cursor()
 cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
@@ -371,7 +371,7 @@ def add_service():
     return jsonify({'message': 'Service added successfully'}), 200
 
 # Edit a service 
-@app.route("/api/services/editservice/<int:service_id>", methods=["GET", "PUT"]) 
+@app.route("/api/services/editservice/<int:service_id>", methods=["GET", "PUT"])
 @jwt_required()
 def edit_service(service_id):
     if request.method == "GET":
@@ -569,7 +569,7 @@ def fluent_living(site):
     site = unquote(site)
     services = db.get_fluent_living(site)
 
-    pprint(services)
+    #pprint(services)
     return jsonify(services)
 
 
@@ -605,4 +605,4 @@ def serve(path):
 
 if __name__ == '__main__':
     CORS(app, supports_credentials=True, resource={r"/*": {"origins": "*"}})
-    app.run(debug=True)
+    app.run()
