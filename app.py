@@ -171,6 +171,7 @@ def register():
 
 # See all sites
 @app.route("/api/sites", methods=["GET"])
+@jwt_required()
 def sites():
     x = db.get_all_sites()
     # print(x)
@@ -178,6 +179,7 @@ def sites():
     
 # Add a site
 @app.route("/api/sites/addsite", methods=["POST"])
+@jwt_required()
 def add_site():
     data = request.get_json()
     # print(data)
@@ -192,6 +194,7 @@ def add_site():
 
 # Delete a site
 @app.route("/api/sites/deletesite", methods=["DELETE"])
+@jwt_required()
 def delete_site():
     data = request.get_json()
     # print(data)
@@ -207,7 +210,8 @@ def delete_site():
         return jsonify({'error': 'Site not found or failed to delete'}), 404
 
 # Edit a site 
-@app.route("/api/sites/editsite/<int:site_id>", methods=["GET", "PUT"])    
+@app.route("/api/sites/editsite/<int:site_id>", methods=["GET", "PUT"]) 
+@jwt_required()
 def edit_site(site_id):
     if request.method == "GET":
         data = db.get_site_by_id(site_id)
@@ -227,6 +231,7 @@ def edit_site(site_id):
     
 # See all products
 @app.route("/api/products", methods=["GET"])
+@jwt_required()
 def products():
     x = db.get_all_products()
     # print(x)
@@ -234,6 +239,7 @@ def products():
 
 # Add a product
 @app.route("/api/products/addproduct", methods=["POST"])
+@jwt_required()
 def add_product():
     data = request.get_json()
     
@@ -255,6 +261,7 @@ def add_product():
 
 # Delete a product
 @app.route("/api/products/deleteproduct", methods=["DELETE"])
+@jwt_required()
 def delete_product():
     data = request.get_json()
     # print(data)
@@ -270,7 +277,8 @@ def delete_product():
         return jsonify({'error': 'Site not found or failed to delete'}), 404
     
 # Edit a product
-@app.route("/api/products/editproduct/<int:product_id>", methods=["GET", "PUT"])    
+@app.route("/api/products/editproduct/<int:product_id>", methods=["GET", "PUT"])   
+@jwt_required()
 def edit_product(product_id):
     if request.method == "GET":
         data = db.get_product_by_id(product_id)
@@ -302,6 +310,7 @@ def edit_product(product_id):
     
 # See all services
 @app.route("/api/services", methods=["GET"])
+@jwt_required()
 def services():
     x = db.get_all_services()
     # print(x)
@@ -309,6 +318,7 @@ def services():
 
 # Add a service
 @app.route("/api/services/addservice", methods=["POST"])
+@jwt_required()
 def add_service():
     data = request.get_json()
 
@@ -361,7 +371,8 @@ def add_service():
     return jsonify({'message': 'Service added successfully'}), 200
 
 # Edit a service 
-@app.route("/api/services/editservice/<int:service_id>", methods=["GET", "PUT"])    
+@app.route("/api/services/editservice/<int:service_id>", methods=["GET", "PUT"])  
+@jwt_required()
 def edit_service(service_id):
     if request.method == "GET":
         data = db.get_service_by_id(service_id)
@@ -385,6 +396,7 @@ def edit_service(service_id):
 
 # Delete a service
 @app.route("/api/services/deleteservice", methods=["DELETE"])
+@jwt_required()
 def delete_service():
     data = request.get_json()
     # print(data)
@@ -401,6 +413,7 @@ def delete_service():
 
 # Dashboard Route - for displaying pie chart data
 @app.route("/api/dashboard", methods=["GET"])
+@jwt_required()
 def dashboard():
     x = db.pie_chart_data()
 
@@ -420,6 +433,7 @@ def dashboard():
 
 # Drill into a site from the dashboard
 @app.route("/api/dashboard/site/<string:site>", methods=["GET"])
+@jwt_required()
 def dashboard_site(site):
     site = unquote(site) # Decode the site name
 
@@ -441,6 +455,7 @@ def dashboard_site(site):
 
 # Route for calculating of active services in the current month
 @app.route("/api/dashboard/site/<string:site>/po", methods=["GET"])
+@jwt_required()
 def calculate_po(site):
     site = unquote(site)
     services = db.services_per_site(site)
@@ -488,6 +503,7 @@ def calculate_po(site):
 
 # Calulate prorata rates for the services in the previous month
 @app.route("/api/dashboard/site/<string:site>/prorata", methods=["GET"])
+@jwt_required()
 def calculate_prorata(site):
     site = unquote(site)
     services = db.services_per_site(site)
@@ -548,6 +564,7 @@ def calculate_prorata(site):
     return jsonify(prorata_services)
 
 @app.route("/api/dashboard/site/<string:site>/fluent_living", methods=["GET"])
+@jwt_required()
 def fluent_living(site):
     site = unquote(site)
     services = db.get_fluent_living(site)
