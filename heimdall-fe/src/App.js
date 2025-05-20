@@ -30,54 +30,54 @@ function App() {
 
         <main className="flex-grow flex items-center justify-center">
           <Routes> 
-            <Route path='/' element={ token ? <Navigate to="/api/dashboard" /> : <Navigate to="/api/login" />} />
-            <Route path="/api/login" element={<Login setToken={setToken} />} />
+            <Route path='/' element={ token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
+            <Route path="/login" element={<Login setToken={setToken} />} />
             {/* <Route path="/logout" element={<Logout />} /> */}
-            <Route path="/api/dashboard" 
+            <Route path="/dashboard" 
                     element={<PrivateRoute>
                               <Dashboard />
                             </PrivateRoute>}/>
-            <Route path="/api/dashboard/site/:id"
+            <Route path="/dashboard/site/:id"
                     element={<PrivateRoute>
                               <DashboardSite />
                             </PrivateRoute>} />
-            <Route path="/api/register" 
+            <Route path="/register" 
                     element={<PrivateRoute>
                               <Register />
                             </PrivateRoute>}/>
-            <Route path="/api/sites" 
+            <Route path="/sites" 
                     element={<PrivateRoute>
                               <Sites />
                             </PrivateRoute>}/>
-            <Route path="/api/sites/addsite" 
+            <Route path="/sites/addsite" 
                     element={<PrivateRoute>
                               <AddSite />
                             </PrivateRoute>}/>
-            <Route path="/api/sites/editsite/:id" 
+            <Route path="/sites/editsite/:id" 
                     element={<PrivateRoute>
                               <EditSite />
                             </PrivateRoute>}/>            
-            <Route path="/api/products" 
+            <Route path="/products" 
                     element={<PrivateRoute>
                               <Products />
                             </PrivateRoute>}/>
-            <Route path="/api/products/addproduct" 
+            <Route path="/products/addproduct" 
                     element={<PrivateRoute>
                               <AddProduct />
                             </PrivateRoute>}/>
-            <Route path="/api/products/editproduct/:id" 
+            <Route path="/products/editproduct/:id" 
                     element={<PrivateRoute>
                               <EditProduct />
                             </PrivateRoute>}/> 
-            <Route path="/api/services" 
+            <Route path="/services" 
                     element={<PrivateRoute>
                               <Services />
                             </PrivateRoute>}/> 
-            <Route path="/api/services/addservice" 
+            <Route path="/services/addservice" 
                     element={<PrivateRoute>
                               <AddService />
                             </PrivateRoute>}/> 
-            <Route path="/api/services/editservice/:id" 
+            <Route path="/services/editservice/:id" 
                     element={<PrivateRoute>
                               <EditService />
                             </PrivateRoute>}/> 
