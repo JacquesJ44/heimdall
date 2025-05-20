@@ -49,7 +49,7 @@ const Sites = () => {
         <div className="min-h-screen bg-base-100 p-4">
             <div className="card w-full shadow-2xl bg-base-200 p-6">
                     <div className="flex justify-end max-w mb-5">
-                        <Link to='/api/sites/addsite' className="btn btn-accent">Add New Site</Link>
+                        <Link to='/sites/addsite' className="btn btn-accent">Add New Site</Link>
                     </div>
                     <table className="table table-full text-sm">
                         <thead>
@@ -70,7 +70,7 @@ const Sites = () => {
                                         <details className="dropdown dropdown-right dropdown-end">
                                         <summary className="m-1 btn ">...</summary>
                                         <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
-                                            <li><Link to={'/api/sites/editsite/' + site.id}>Edit</Link></li>
+                                            <li><Link to={'/sites/editsite/' + site.id}>Edit</Link></li>
                                             <li><button onClick={() => { setShowModal(true); setSiteToDelete(site.id) }}>Delete</button></li>
                                         </ul>
                                         </details>

@@ -32,7 +32,7 @@ const Dashboard = () => {
           {Object.entries(data).map(([site, data], idx) => (
             <div key={site} style={{ marginBottom: '40px' }}>
               <strong>
-                <Link to={`/api/dashboard/site/${encodeURIComponent(site)}`}>{site}</Link>
+                <Link to={`/dashboard/site/${encodeURIComponent(site)}`}>{site}</Link>
               </strong>
               <PieChart width={400} height={400}>
                 <Pie
