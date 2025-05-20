@@ -277,7 +277,7 @@ def delete_product():
         return jsonify({'error': 'Site not found or failed to delete'}), 404
     
 # Edit a product
-@app.route("/api/products/editproduct/<int:product_id>", methods=["GET", "PUT"])   
+@app.route("/api/products/editproduct/<int:product_id>", methods=["GET", "PUT"])
 @jwt_required()
 def edit_product(product_id):
     if request.method == "GET":
@@ -371,7 +371,7 @@ def add_service():
     return jsonify({'message': 'Service added successfully'}), 200
 
 # Edit a service 
-@app.route("/api/services/editservice/<int:service_id>", methods=["GET", "PUT"])  
+@app.route("/api/services/editservice/<int:service_id>", methods=["GET", "PUT"])
 @jwt_required()
 def edit_service(service_id):
     if request.method == "GET":
