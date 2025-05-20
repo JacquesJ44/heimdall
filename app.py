@@ -24,7 +24,7 @@ db = DbUtil({
 
 app = Flask(__name__, static_folder="heimdall-fe/build", static_url_path="/") # Path to your React build folder
     
-
+# Users\Jacques\Documents\vsc\heimdall\heimdall-fe\build
 app.config['SECRET_KEY'] = os.urandom(12).hex()
 app.config['JWT_SECRET_KEY'] = 'idjfehoHkhK#54kk5k2$kjhfe'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
@@ -133,7 +133,7 @@ def refresh_expiring_jwts(response):
         return response
 
 #Login route 
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login():
 
     if not request.is_json:
@@ -152,7 +152,7 @@ def login():
     access_token = create_access_token(identity=data['email'])
     return jsonify(access_token=access_token)
 
-@app.route("/register", methods=["POST"])
+@app.route("/api/register", methods=["POST"])
 def register():
     data = request.get_json()
     # print(data)
@@ -170,14 +170,14 @@ def register():
     return jsonify({"msg": "Registration successful"})
 
 # See all sites
-@app.route("/sites", methods=["GET"])
+@app.route("/api/sites", methods=["GET"])
 def sites():
     x = db.get_all_sites()
     # print(x)
     return jsonify(x)
     
 # Add a site
-@app.route("/sites/addsite", methods=["POST"])
+@app.route("/api/sites/addsite", methods=["POST"])
 def add_site():
     data = request.get_json()
     # print(data)
@@ -191,7 +191,7 @@ def add_site():
         return jsonify({'message': 'Site added successfully'}), 200
 
 # Delete a site
-@app.route("/sites/deletesite", methods=["DELETE"])
+@app.route("/api/sites/deletesite", methods=["DELETE"])
 def delete_site():
     data = request.get_json()
     # print(data)
@@ -207,7 +207,7 @@ def delete_site():
         return jsonify({'error': 'Site not found or failed to delete'}), 404
 
 # Edit a site 
-@app.route("/sites/editsite/<int:site_id>", methods=["GET", "PUT"])    
+@app.route("/api/sites/editsite/<int:site_id>", methods=["GET", "PUT"])    
 def edit_site(site_id):
     if request.method == "GET":
         data = db.get_site_by_id(site_id)
@@ -226,14 +226,14 @@ def edit_site(site_id):
             return jsonify({'error': 'No changes made'}), 404
     
 # See all products
-@app.route("/products", methods=["GET"])
+@app.route("/api/products", methods=["GET"])
 def products():
     x = db.get_all_products()
     # print(x)
     return jsonify(x)
 
 # Add a product
-@app.route("/products/addproduct", methods=["POST"])
+@app.route("/api/products/addproduct", methods=["POST"])
 def add_product():
     data = request.get_json()
     
@@ -254,7 +254,7 @@ def add_product():
     return jsonify({'message': 'Product added successfully'}), 200
 
 # Delete a product
-@app.route("/products/deleteproduct", methods=["DELETE"])
+@app.route("/api/products/deleteproduct", methods=["DELETE"])
 def delete_product():
     data = request.get_json()
     # print(data)
@@ -270,7 +270,7 @@ def delete_product():
         return jsonify({'error': 'Site not found or failed to delete'}), 404
     
 # Edit a product
-@app.route("/products/editproduct/<int:product_id>", methods=["GET", "PUT"])    
+@app.route("/api/products/editproduct/<int:product_id>", methods=["GET", "PUT"])    
 def edit_product(product_id):
     if request.method == "GET":
         data = db.get_product_by_id(product_id)
@@ -301,14 +301,14 @@ def edit_product(product_id):
         return jsonify({'msg': 'An Error Ocurred while updating product'}), 404
     
 # See all services
-@app.route("/services", methods=["GET"])
+@app.route("/api/services", methods=["GET"])
 def services():
     x = db.get_all_services()
     # print(x)
     return jsonify(x)
 
 # Add a service
-@app.route("/services/addservice", methods=["POST"])
+@app.route("/api/services/addservice", methods=["POST"])
 def add_service():
     data = request.get_json()
 
@@ -361,7 +361,7 @@ def add_service():
     return jsonify({'message': 'Service added successfully'}), 200
 
 # Edit a service 
-@app.route("/services/editservice/<int:service_id>", methods=["GET", "PUT"])    
+@app.route("/api/services/editservice/<int:service_id>", methods=["GET", "PUT"])    
 def edit_service(service_id):
     if request.method == "GET":
         data = db.get_service_by_id(service_id)
@@ -384,7 +384,7 @@ def edit_service(service_id):
             return jsonify({'error': 'No changes made'}), 404
 
 # Delete a service
-@app.route("/services/deleteservice", methods=["DELETE"])
+@app.route("/api/services/deleteservice", methods=["DELETE"])
 def delete_service():
     data = request.get_json()
     # print(data)
@@ -400,7 +400,7 @@ def delete_service():
         return jsonify({'error': 'Site not found or failed to delete'}), 404
 
 # Dashboard Route - for displaying pie chart data
-@app.route("/dashboard", methods=["GET"])
+@app.route("/api/dashboard", methods=["GET"])
 def dashboard():
     x = db.pie_chart_data()
 
@@ -419,7 +419,7 @@ def dashboard():
     return jsonify(chart_data)
 
 # Drill into a site from the dashboard
-@app.route("/dashboard/site/<string:site>", methods=["GET"])
+@app.route("/api/dashboard/site/<string:site>", methods=["GET"])
 def dashboard_site(site):
     site = unquote(site) # Decode the site name
 
@@ -440,7 +440,7 @@ def dashboard_site(site):
     })
 
 # Route for calculating of active services in the current month
-@app.route("/dashboard/site/<string:site>/po", methods=["GET"])
+@app.route("/api/dashboard/site/<string:site>/po", methods=["GET"])
 def calculate_po(site):
     site = unquote(site)
     services = db.services_per_site(site)
@@ -487,7 +487,7 @@ def calculate_po(site):
     return jsonify(result)
 
 # Calulate prorata rates for the services in the previous month
-@app.route("/dashboard/site/<string:site>/prorata", methods=["GET"])
+@app.route("/api/dashboard/site/<string:site>/prorata", methods=["GET"])
 def calculate_prorata(site):
     site = unquote(site)
     services = db.services_per_site(site)
@@ -547,7 +547,7 @@ def calculate_prorata(site):
     # pprint(prorata_services)
     return jsonify(prorata_services)
 
-@app.route("/dashboard/site/<string:site>/fluent_living", methods=["GET"])
+@app.route("/api/dashboard/site/<string:site>/fluent_living", methods=["GET"])
 def fluent_living(site):
     site = unquote(site)
     services = db.get_fluent_living(site)
@@ -557,13 +557,13 @@ def fluent_living(site):
 
 
 #Logout route
-@app.route("/logout", methods=["POST"])
+@app.route("/api/logout", methods=["POST"])
 def logout():
     response = jsonify({"msg": "logout successful"})
     unset_jwt_cookies(response)
     return response
 
-@app.route("/navbar")
+@app.route("/api/navbar")
 @jwt_required()
 def navbar():
     current_user = get_jwt_identity()
@@ -574,10 +574,17 @@ def navbar():
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve(path):
-    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+    # Exclude API routes from being caught here
+    if path.startswith("api") or path.startswith("static") or path.endswith(('.js', '.css', '.json', '.ico', '.png')):
         return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, "index.html")
+
+    # Serve actual files if they exist
+    full_path = os.path.join(app.static_folder, path)
+    if os.path.exists(full_path):
+        return send_from_directory(app.static_folder, path)
+
+    # Serve React index.html for everything else
+    return send_from_directory(app.static_folder, "index.html")
 
 if __name__ == '__main__':
     CORS(app, supports_credentials=True, resource={r"/*": {"origins": "*"}})
