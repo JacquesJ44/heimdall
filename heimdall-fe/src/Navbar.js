@@ -15,7 +15,7 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
         setMessage("No token found")
         return;
       }
-      axios.get('/navbar', {
+      axios.get('/api/navbar', {
         headers: {
           Authorization: `Bearer ${storedToken}`
         }
@@ -36,7 +36,7 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
     const handleLogout = async () => {
         try {
           // Optionally notify the backend
-          await axios.post('/logout', {}, { withCredentials: true });
+          await axios.post('/api/logout', {}, { withCredentials: true });
     
           // Clear local token
           localStorage.removeItem('token');
@@ -67,18 +67,18 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
           {token ? (
             <>
 
-              <li className="mx-2"><Link to="/dashboard">Dashboard</Link></li>
-              <li className="mx-2"><Link to="/services">Services</Link></li>
-              <li className="mx-2"><Link to="/products">Products</Link></li>
-              <li className="mx-2"><Link to="/sites">Sites</Link></li>
-              <li className="mx-2"><Link to="/register">Register New User</Link></li>
+              <li className="mx-2"><Link to="/api/dashboard">Dashboard</Link></li>
+              <li className="mx-2"><Link to="/api/services">Services</Link></li>
+              <li className="mx-2"><Link to="/api/products">Products</Link></li>
+              <li className="mx-2"><Link to="/api/sites">Sites</Link></li>
+              <li className="mx-2"><Link to="/api/register">Register New User</Link></li>
               <li className="mx-2">
                 <button onClick={handleLogout} className="btn btn-outline btn-sm">Logout</button>
                 {message}
               </li>
             </>
           ) : (
-            <li className="mx-2"><Link to="/login">Login</Link></li>
+            <li className="mx-2"><Link to="/api/login">Login</Link></li>
           )}
         </ul>
       </div>

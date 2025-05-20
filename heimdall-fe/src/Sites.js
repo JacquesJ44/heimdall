@@ -11,7 +11,7 @@ const Sites = () => {
     const [siteToDelete, setSiteToDelete] = useState(null);
 
     useEffect(() => {
-        axios.get('/sites')
+        axios.get('/api/sites')
           .then(response => {
             setSites(response.data);
             // console.log(response.data);
@@ -26,7 +26,7 @@ const Sites = () => {
 
         try {
             // Make the DELETE request to Flask, including site ID
-            await axios.delete('/sites/deletesite', {
+            await axios.delete('/api/sites/deletesite', {
             data: { id: siteId }, // sending ?id=123
       });
           // Show success message
@@ -49,7 +49,7 @@ const Sites = () => {
         <div className="min-h-screen bg-base-100 p-4">
             <div className="card w-full shadow-2xl bg-base-200 p-6">
                     <div className="flex justify-end max-w mb-5">
-                        <Link to='/sites/addsite' className="btn btn-accent">Add New Site</Link>
+                        <Link to='/api/sites/addsite' className="btn btn-accent">Add New Site</Link>
                     </div>
                     <table className="table table-full text-sm">
                         <thead>
@@ -70,7 +70,7 @@ const Sites = () => {
                                         <details className="dropdown dropdown-right dropdown-end">
                                         <summary className="m-1 btn ">...</summary>
                                         <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
-                                            <li><Link to={'/sites/editsite/' + site.id}>Edit</Link></li>
+                                            <li><Link to={'/api/sites/editsite/' + site.id}>Edit</Link></li>
                                             <li><button onClick={() => { setShowModal(true); setSiteToDelete(site.id) }}>Delete</button></li>
                                         </ul>
                                         </details>

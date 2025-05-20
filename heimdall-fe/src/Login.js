@@ -11,7 +11,7 @@ const Login = ({ setToken }) => {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const response = await axios.post('/login', { email, password });
+      const response = await axios.post('/api/login', { email, password });
       const token = response.data.access_token;
     //   console.log(response);
     //   console.log(token);

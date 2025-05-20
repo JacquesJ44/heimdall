@@ -15,7 +15,7 @@ const Register = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const response = await axios.post('/register', { name, surname,email, password, confirmPassword });
+      const response = await axios.post('/api/register', { name, surname,email, password, confirmPassword });
     
     //   const token = response.data.access_token;
     //   console.log(response);

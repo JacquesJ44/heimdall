@@ -15,7 +15,7 @@ const EditProduct = () => {
     let navigate = useNavigate()
 
     useEffect(() => {
-        axios.get(`/products/editproduct/${id}`)
+        axios.get(`/api/products/editproduct/${id}`)
           .then(response => {
             const data = response.data;
             // console.log(data);
@@ -31,7 +31,7 @@ const EditProduct = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-          const response = await axios.put(`/products/editproduct/${id}`, { name, cost_price, selling_price });
+          const response = await axios.put(`/api/products/editproduct/${id}`, { name, cost_price, selling_price });
         //   console.log(response);
           setShowSuccess(true);
           // Wait 1.5 seconds before reloading
