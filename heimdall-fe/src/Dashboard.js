@@ -1,6 +1,6 @@
 import { useState,useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import axios from './AxiosInstance'
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CF1', '#FF6699'];
