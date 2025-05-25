@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import axios from './AxiosInstance';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Login = ({ setToken }) => {
   const [email, setEmail] = useState('');
@@ -54,6 +54,15 @@ const Login = ({ setToken }) => {
                                 onChange={(e) => setPassword(e.target.value)} 
                             />
                         </div>
+
+                        <div className="form-control mt-2 text-right">
+                            <Link 
+                                to="/forgot-password" 
+                                className="text-sm text-blue-600 hover:underline">
+                                Forgot password?
+                            </Link>
+                        </div>
+
                         <div className="form-control mt-6">
                             <button className="btn btn-accent">Login</button>
                         </div>
