@@ -88,9 +88,10 @@ const DashboardSite = () => {
                 <ActionDropdown onActionSelect={handleActionSelect} />
               </div>
 
-                <div className="grid grid-cols-3 gap-4 my-4">
+                <div className="grid grid-cols-4 gap-4 my-4">
                     <Card title="Total Units" value={services.total} />
                     <Card title="Active Units" value={services.active} />
+                    <Card title="Sellthrough percentage" value={`${((services.active / services.total) * 100).toFixed(2)}%`} />
                     <Card title="Active Revenue" value={`R ${services.total_selling}`} />
                 </div>
 
