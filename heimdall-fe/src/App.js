@@ -5,6 +5,8 @@ import './App.css';
 import PrivateRoute from './PrivateRoute';
 import Navbar from './Navbar'
 import Login from './Login'
+import ForgotPassword from './ForgotPassword'
+import ResetPassword from './ResetPassword'
 import Dashboard from './Dashboard';
 import DashboardSite from './DashboardSite';
 import Register from './Register'
@@ -32,7 +34,9 @@ function App() {
           <Routes> 
             <Route path='/' element={ token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
             <Route path="/login" element={<Login setToken={setToken} />} />
-            {/* <Route path="/logout" element={<Logout />} /> */}
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            
             <Route path="/dashboard" 
                     element={<PrivateRoute>
                               <Dashboard />

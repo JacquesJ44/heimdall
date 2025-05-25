@@ -12,7 +12,7 @@ class DbUtil:
         return pymysql.connect(
             host=self.config['host'],
             user=self.config['user'],
-            # password=self.config['password'],
+            # password=self.config.get('password'),
             db=self.config['db'],
             cursorclass=pymysql.cursors.Cursor  # or DictCursor if you prefer
         )
@@ -42,6 +42,18 @@ class DbUtil:
                     'SELECT * FROM users WHERE email = %s', (email,)
                 )
                 return c.fetchone()
+        finally:
+            con.close()
+
+    def update_forgotten_pw(self, email, password):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'UPDATE users SET password = %s WHERE email = %s', (password, email)
+                )
+                con.commit()
         finally:
             con.close()
     
@@ -248,6 +260,10 @@ class DbUtil:
                     FROM services s
                     JOIN sites si ON s.site_id = si.id
                     JOIN products p ON s.product_id = p.id
+                    ORDER BY 
+                        si.name,
+                        REGEXP_SUBSTR(s.unit_number, '^[A-Za-z]+'),
+                        CAST(REGEXP_SUBSTR(s.unit_number, '[0-9]+') AS UNSIGNED)
                 """)
                 rows = c.fetchall()
                 col_names = [c[0] for c in c.description]
@@ -369,7 +385,10 @@ class DbUtil:
                     FROM services s
                     JOIN sites si ON s.site_id = si.id
                     JOIN products p ON s.product_id = p.id
-                    WHERE si.name = %s      
+                    WHERE si.name = %s
+                    ORDER BY 
+                        REGEXP_SUBSTR(s.unit_number, '^[A-Za-z]+'),
+                        CAST(REGEXP_SUBSTR(s.unit_number, '[0-9]+') AS UNSIGNED)   
                 """, (site,))
     
                 rows = c.fetchall()

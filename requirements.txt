@@ -1,4 +1,7 @@
 flask
 flask-cors
 flask-jwt-extended
+flask-mail
 pymysql
+python-dotenv
+

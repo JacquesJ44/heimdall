@@ -1,36 +1,55 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, url_for
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, unset_jwt_cookies, jwt_required, JWTManager
+from flask_mail import Mail, Message
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, date
 from collections import defaultdict
 from calendar import monthrange
+from itsdangerous import URLSafeTimedSerializer
+from threading import Thread
+from dotenv import load_dotenv
 import hashlib
 import binascii
-import pymysql
 import json
 import os
 
 from pprint import pprint
 from urllib.parse import unquote
 
+# Load variables from .env
+load_dotenv()
+
 from db import DbUtil
 db = DbUtil({
-    'host': 'localhost',
-    'user': 'root',
-    'db': 'heimdall'
+    'host': os.getenv('DB_HOST'),
+    'user': os.getenv('DB_USER'),
+    # 'password': os.getenv('DB_PASSWORD'),
+    'db': os.getenv('DB_NAME')
 })
 
 app = Flask(__name__, static_folder="heimdall-fe/build", static_url_path="/") # Path to your React build folder
-    
-# Users\Jacques\Documents\vsc\heimdall\heimdall-fe\build
-app.config['SECRET_KEY'] = os.urandom(12).hex()
-app.config['JWT_SECRET_KEY'] = 'idjfehoHkhK#54kk5k2$kjhfe'
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-jwt = JWTManager(app)
 
-con = pymysql.connect(host='localhost', user='root', database='heimdall')
+# Secret Keys
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
+
+# Email
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
+
+serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
+jwt = JWTManager(app)
+mail = Mail(app)
+
+con = db.get_connection()
 cur = con.cursor()
 cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
@@ -573,13 +592,7 @@ def fluent_living(site):
     return jsonify(services)
 
 
-#Logout route
-@app.route("/api/logout", methods=["POST"])
-def logout():
-    response = jsonify({"msg": "logout successful"})
-    unset_jwt_cookies(response)
-    return response
-
+# Route for the navbar
 @app.route("/api/navbar")
 @jwt_required()
 def navbar():
@@ -587,7 +600,69 @@ def navbar():
     # print('current_user: ', current_user)
     return jsonify(logged_in_as=current_user)
 
-# This route will serve the React app - to avoid the browser return json output upon a refresh
+# Route for forgotten password
+@app.route('/api/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.get_json()
+    email = data.get('email')
+
+    user = db.get_user_by_email(email)
+
+    if user:
+        token = serializer.dumps(email, salt='password-reset')
+        # reset_url = url_for('reset_password', token=token, _external=True)
+        reset_url = f"http://localhost:3000/reset-password/{token}"
+
+        # Launch email sending in a background thread
+        Thread(target=send_reset_email, args=(app, email, reset_url)).start()
+
+    return jsonify({'message': 'If the email exists, a reset link will be sent.'}), 200
+
+# Create a thread so the mail sending logic runs in the background while the alert message is displayed
+def send_reset_email(app, email, reset_url):
+    with app.app_context():
+        
+    # Send email (for now, just print it)
+    # print(f"Send this reset link to the user: {reset_url}")
+
+        msg = Message("Password Reset Request", recipients=[email])
+        msg.body = f"Click the link to reset your password: {reset_url}"
+        msg.html = f"""\
+                        <p>Hello,</p>
+                        <p>Click below to reset your password:</p>
+                        <a href="{reset_url}">{reset_url}</a>
+                    """
+        try:
+            mail.send(msg)
+            print("Email sent!")
+        except Exception as e:
+            print("Failed to send email:", e)
+
+# Route for password reset
+@app.route('/api/reset-password/<token>', methods=['POST'])
+def reset_password(token):
+    data = request.get_json()
+    new_password = data.get('new_password')  # Make sure to hash this in production
+
+    new_password_hashed = hash_password(new_password)
+
+    try:
+        email = serializer.loads(token, salt='password-reset', max_age=3600)  # 1-hour expiry
+    except Exception:
+        return jsonify({'message': 'Invalid or expired token'}), 400
+
+    db.update_forgotten_pw(email, new_password_hashed)
+
+    return jsonify({'message': 'Password reset successfully'}), 200
+
+#Logout route
+@app.route("/api/logout", methods=["POST"])
+def logout():
+    response = jsonify({"msg": "logout successful"})
+    unset_jwt_cookies(response)
+    return response
+
+# This route will serve the React app - this helps for routing in the Production environment
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve(path):
