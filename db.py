@@ -416,6 +416,9 @@ class DbUtil:
                     JOIN sites si ON s.site_id = si.id
                     JOIN products p ON s.product_id = p.id
                     WHERE s.fluent_living = 1 AND si.name = %s
+                    ORDER BY 
+                        REGEXP_SUBSTR(s.unit_number, '^[A-Za-z]+'),
+                        CAST(REGEXP_SUBSTR(s.unit_number, '[0-9]+') AS UNSIGNED)
                     """, (site,))
                 rows = c.fetchall()
                 # print("Query result:", rows)
