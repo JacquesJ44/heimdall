@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory, url_for
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, unset_jwt_cookies, jwt_required, JWTManager
 from flask_mail import Mail, Message
@@ -29,7 +29,7 @@ db = DbUtil({
     'db': os.getenv('DB_NAME')
 })
 
-app = Flask(__name__, static_folder="heimdall-fe/build", static_url_path="/") # Path to your React build folder
+app = Flask(__name__, static_url_path="/heimdall/static") # Path to your React build folder
 
 # Secret Keys
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
