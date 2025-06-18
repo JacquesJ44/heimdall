@@ -13,7 +13,7 @@ const Services = () => {
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
-        axios.get('/api/services')
+        axios.get('/heimdall/api/services')
           .then(response => {
             setServices(response.data);
             // console.log(response.data);
@@ -40,7 +40,7 @@ const Services = () => {
 
         try {
             // Make the DELETE request to Flask, including site ID
-            await axios.delete('/api/services/deleteservice', {
+            await axios.delete('/heimdall/api/services/deleteservice', {
             data: { id: serviceId }, // sending ?id=123
       });
           // Show success message

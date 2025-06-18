@@ -40,7 +40,7 @@ const AddService = () => {
     useEffect(() => {
         
         // Get all sites
-        axios.get('/api/sites')
+        axios.get('/heimdall/api/sites')
         .then((res) => {
             setSites(res.data);
             // console.log(res.data);
@@ -48,7 +48,7 @@ const AddService = () => {
         .catch(error => console.log(error));
 
         // Get all products
-        axios.get('/api/products')
+        axios.get('/heimdall/api/products')
         .then((res) => {
             setProducts(res.data);
             // console.log(res.data);
@@ -60,7 +60,7 @@ const AddService = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-          const response = await axios.post('/api/services/addservice', { site_id, unit_number, onu_make, onu_model, onu_serial, onu_number, gpon_serial, status: status ? status : 0, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5ghz, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living: fluent_living ? fluent_living : 0, product_id, activation_date: status ? activation_date: null, comments });
+          const response = await axios.post('/heimdall/api/services/addservice', { site_id, unit_number, onu_make, onu_model, onu_serial, onu_number, gpon_serial, status: status ? status : 0, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5ghz, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living: fluent_living ? fluent_living : 0, product_id, activation_date: status ? activation_date: null, comments });
         //   console.log(response.data);
           setShowSuccess(true);
           // Wait 1.5 seconds before reloading

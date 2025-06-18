@@ -13,7 +13,7 @@ const Dashboard = () => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    axios.get('/api/dashboard')
+    axios.get('/heimdall/api/dashboard')
     .then(response => {
       setData(response.data);
       // console.log(response.data);

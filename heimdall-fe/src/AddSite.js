@@ -15,7 +15,7 @@ const AddSite = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-          const response = await axios.post('/api/sites/addsite', { name, street, suburb });
+          const response = await axios.post('/heimdall/api/sites/addsite', { name, street, suburb });
         //   console.log(response);
           setShowSuccess(true);
           // Wait 1.5 seconds before reloading
