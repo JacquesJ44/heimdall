@@ -29,7 +29,7 @@ db = DbUtil({
     'db': os.getenv('DB_NAME')
 })
 
-app = Flask(__name__, static_folder="heimdall-fe/build", static_url_path="/") # Path to your React build folder
+app = Flask(__name__, static_url_path="/heimdall/static") # Path to your React build folder
 
 # Secret Keys
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
