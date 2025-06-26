@@ -109,8 +109,21 @@ cur.execute("""
         FOREIGN KEY (product_id) REFERENCES products(id),
         FOREIGN KEY (site_id) REFERENCES sites(id)
     )
-""")           
-         
+""")   
+        
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS user_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    target_table VARCHAR(100),
+    target_id INT,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+""")      
+
 con.close()
 
 # Hash the password
@@ -612,7 +625,7 @@ def forgot_password():
     if user:
         token = serializer.dumps(email, salt='password-reset')
         # reset_url = url_for('reset_password', token=token, _external=True)
-        reset_url = f"http://localhost:3000/reset-password/{token}"
+        reset_url = f"http://192.168.99.218/heimdall/reset-password/{token}"
 
         # Launch email sending in a background thread
         Thread(target=send_reset_email, args=(app, email, reset_url)).start()
