@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from './AxiosInstance'
-
+import { Plus } from "lucide-react";
+import axios from './AxiosInstance';
 
 const Sites = () => {
 
@@ -50,7 +50,9 @@ const Sites = () => {
         <div className="min-h-screen bg-base-100 p-4">
             <div className="card w-full shadow-2xl bg-base-200 p-6">
                     <div className="flex justify-end max-w mb-5">
-                        <Link to='/sites/addsite' className="btn btn-accent">Add New Site</Link>
+                        <Link to='/sites/addsite' className="btn btn-accent">
+                            <Plus size={18} /> Add New Site
+                        </Link>
                     </div>
                     <table className="table table-full text-sm">
                         <thead>
@@ -102,14 +104,7 @@ const Sites = () => {
                     </div>
                     )}
                     {showSuccess && (
-                        <div style={{
-                        padding: '10px',
-                        marginTop: '10px',
-                        backgroundColor: '#d4edda',
-                        color: '#155724',
-                        border: '1px solid #c3e6cb',
-                        borderRadius: '5px'
-                        }}>
+                        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
                         ✅ Site deleted successfully!
                         </div>
                     )}

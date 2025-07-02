@@ -21,6 +21,8 @@ from urllib.parse import unquote
 # Load variables from .env
 load_dotenv()
 
+from utils import describe_changes_log
+
 from db import DbUtil
 db = DbUtil({
     'host': os.getenv('DB_HOST'),
@@ -90,7 +92,7 @@ cur.execute("""
         onu_serial VARCHAR(50),
         onu_number VARCHAR(20),
         gpon_serial VARCHAR(50),
-        status BOOLEAN,
+        status VARCHAR(20),
         light_level VARCHAR(10),
         pppoe_un VARCHAR(20),
         pppoe_pw VARCHAR(20),
@@ -109,7 +111,21 @@ cur.execute("""
         FOREIGN KEY (product_id) REFERENCES products(id),
         FOREIGN KEY (site_id) REFERENCES sites(id)
     )
-""")           
+""")   
+
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS user_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(150) NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    target_table VARCHAR(100),
+    target_id INT,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    details TEXT
+)
+""")
          
 con.close()
 
@@ -163,6 +179,8 @@ def login():
     # print(data)
     
     row = db.get_user_by_email(data['email'])
+    pprint(row)
+
     if not row:
        return jsonify({"msg": "User with this email does not exist"}), 400
 
@@ -170,6 +188,19 @@ def login():
         return jsonify({"msg": "Invalid credentials"}), 401
 
     access_token = create_access_token(identity=data['email'])
+
+    # ✅ Log the login
+    try:
+        db.log_action(
+            user_id=row[0],
+            action="login",
+            target_table="users",
+            target_id=row[0],
+            details=f"{row[3]} logged in successfully.",
+        )
+    except Exception as e:
+        print(f"⚠️ Logging error: {e}")
+
     return jsonify(access_token=access_token)
 
 @app.route("/api/register", methods=["POST"])
@@ -287,14 +318,14 @@ def delete_product():
     # print(data)
     product_id = data.get('id')
     if not product_id:
-        return jsonify({'error': 'Missing site ID'}), 400
+        return jsonify({'error': 'Missing product ID'}), 400
 
     success = db.delete_product(product_id)
     
     if success:
-        return jsonify({'message': 'Site deleted successfully'}), 200
+        return jsonify({'message': 'Product deleted successfully'}), 200
     else:
-        return jsonify({'error': 'Site not found or failed to delete'}), 404
+        return jsonify({'error': 'Product not found or failed to delete'}), 404
     
 # Edit a product
 @app.route("/api/products/editproduct/<int:product_id>", methods=["GET", "PUT"])
@@ -387,6 +418,28 @@ def add_service():
     except Exception as e:
         print(f"DB error during save: {e}")
         return jsonify({"msg": "Failed to save the service due to a server error."}), 500
+    
+    # LOGGING ACTIONS
+    try:
+        user_id = get_jwt_identity()
+        # print('jwt id: ', user_id)
+        details = describe_changes_log({},data, fields=[
+            'site_id', 'unit_number', 'onu_make', 'onu_model', 'onu_serial',
+            'onu_number', 'gpon_serial', 'status', 'light_level',
+            'pppoe_un', 'pppoe_pw', 'ssid_24ghz', 'password_24ghz',
+            'ssid_5ghz', 'password_5ghz', 'customer_fullname',
+            'contact_number', 'email', 'debit_order_status',
+            'fluent_living', 'product_id', activation_date, 'comments'
+        ])
+        db.log_action(
+            user_id=user_id,
+            action="create",
+            target_table="services",
+            target_id=None,  # or get the ID if save_service returns it
+            details=details
+        )
+    except Exception as e:
+        print(f"⚠️ Logging error: {e}")
 
     return jsonify({'message': 'Service added successfully'}), 200
 
@@ -406,10 +459,43 @@ def edit_service(service_id):
         return jsonify({'error': 'Site not found'}), 404
 
     if request.method == "PUT":
-        data = request.get_json()
-        # print(data)
-        success = db.edit_service(service_id, **data)
+        new_data = request.get_json()
+        # pprint(new_data)
+
+        if new_data['activation_date'] == '':
+            new_data['activation_date'] = None
+
+        # 1. Get old data for logging comparison
+        old_data = db.get_service_by_id(service_id)
+        # pprint(old_data)
+
+        if old_data and old_data.get('activation_date'):
+            old_data['activation_date'] = old_data['activation_date'].strftime('%Y-%m-%d')
+
+        # 2. Edit the service
+        success = db.edit_service(service_id, **new_data)
         if success > 0: 
+            try:
+                user_id = get_jwt_identity()
+                details = describe_changes_log(old_data, new_data, fields=[
+                'site_id', 'unit_number', 'onu_make', 'onu_model', 'onu_serial',
+                'onu_number', 'gpon_serial', 'status', 'light_level',
+                'pppoe_un', 'pppoe_pw', 'ssid_24ghz', 'password_24ghz',
+                'ssid_5ghz', 'password_5ghz', 'customer_fullname',
+                'contact_number', 'email', 'debit_order_status',
+                'fluent_living', 'product_id','activation_date', 'comments'
+                ])
+
+                db.log_action(
+                    user_id=user_id,
+                    action="update",
+                    target_table="services",
+                    target_id=service_id,
+                    details=details
+                )
+            except Exception as e:
+                print(f"⚠️ Logging error: {e}")
+
             return jsonify({'message': 'Site edited successfully'}), 200
         else:
             return jsonify({'error': 'No changes made'}), 404
@@ -462,7 +548,7 @@ def dashboard_site(site):
     # pprint(x)
 
     total = len(x)
-    active_units = [u for u in x if u['status'] == 1]
+    active_units = [u for u in x if u['status'] == 'Active']
     total_active = len(active_units)
     total_selling = sum(u['selling_price'] for u in active_units if u['selling_price'] is not None)
 
@@ -488,7 +574,7 @@ def calculate_po(site):
     package_summary = defaultdict(lambda: {"count": 0, "cost_price": 0})
 
     for s in services:
-        if s["status"] == 1 and s["package"]:  # only active services with valid packages
+        if s["status"] == "Active" and s["package"]:  # only active services with valid packages
             activation_date = s.get("activation_date")
             # print(f"{activation_date=}, {activation_date.year=}, {activation_date.month=}")
 
@@ -552,7 +638,7 @@ def calculate_prorata(site):
         cost_price = s.get("cost_price")
         package = s.get("package")
 
-        if s["status"] != 1 or not activation_date or not package:
+        if s["status"] != 'Active' or not activation_date or not package:
             continue
 
         # Parse date safely
@@ -591,7 +677,6 @@ def fluent_living(site):
 
     #pprint(services)
     return jsonify(services)
-
 
 # Route for the navbar
 @app.route("/api/navbar")
@@ -662,6 +747,18 @@ def logout():
     response = jsonify({"msg": "logout successful"})
     unset_jwt_cookies(response)
     return response
+
+@app.route('/api/logs', methods=['GET'])
+# @jwt_required()
+def view_logs():
+    try:
+        # print("VIEW_LOGS ROUTE HIT ✅")
+        rows = db.view_logs()
+        # print("ROWS:", rows)
+        return jsonify(rows)
+    except Exception as e:
+        print("ERROR:", str(e))
+        return jsonify({"error": str(e)}), 500
 
 # This route will serve the React app - this helps for routing in the Production environment
 @app.route("/", defaults={"path": ""})
