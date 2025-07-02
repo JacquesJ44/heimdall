@@ -36,6 +36,7 @@ const EditService = () => {
     const [sites, setSites] = useState([]);
     const [products, setProducts] = useState([]);
     const [debitOrderStatuses] = useState(['Not Applied Yet', 'Not Done', 'Done', 'Done and Live']);
+    const [statuses] = useState(['Active', 'Inactive', 'Suspended']);
 
     let navigate = useNavigate()
 
@@ -51,7 +52,7 @@ const EditService = () => {
             setOnuSerial(data.onu_serial);
             setGponSerial(data.gpon_serial);
             setOnuNumber(data.onu_number);
-            setStatus(Boolean(data.status));
+            setStatus(data.status);
             setLightLevel(data.light_level);
             setPppoe_un(data.pppoe_un);
             setPppoe_pw(data.pppoe_pw);
@@ -92,7 +93,7 @@ const EditService = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-          const response = await axios.put(`/heimdall/api/services/editservice/${id}`, { site_id, unit_number, onu_make, onu_model, onu_serial, gpon_serial, onu_number, status: status ? status : 0, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5ghz, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living: fluent_living ? fluent_living : 0, activation_date: status === true ? activation_date : null, comments, product_id });
+          const response = await axios.put(`heimdall/api/services/editservice/${id}`, { site_id, unit_number, onu_make, onu_model, onu_serial, gpon_serial, onu_number, status, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5ghz, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living: fluent_living ? fluent_living : 0, activation_date, comments, product_id });
         //   console.log(response);
           // Check for successful update or no changes made
         if (response.status === 404) {
@@ -376,41 +377,46 @@ const EditService = () => {
                                     onChange={(e) => setDebitOrderStatus(e.target.value)}
                                     required>
                                     <option value="">Please Select</option>
-                                    {debitOrderStatuses.map((status, index) => (
-                                        <option key={index} value={status}>
-                                            {status}
+                                    {debitOrderStatuses.map((stat, index) => (
+                                        <option key={index} value={stat}>
+                                            {stat}
+                                        </option>
+                                    ))}
+                                </select>
+                                </div>
+                                
+                                <div className="flex flex-col">
+                                <div className="form-control mt-4">
+                                <label className="label">
+                                    <span className="label-text">Status</span>
+                                </label>
+                                <select
+                                    className="select select-bordered"
+                                    value={status}
+                                    onChange={(e) => setStatus(e.target.value)}
+                                    required>
+                                    <option value="">Please Select</option>
+                                    {statuses.map((s, index) => (
+                                        <option key={index} value={s}>
+                                            {s}
                                         </option>
                                     ))}
                                 </select>
                                 </div>
                                 
                                 <div className="form-control mt-4">
-                                    <label className="cursor-pointer label">
-                                    <span className="label-text">Service Active?</span> 
-                                    <input 
-                                        className="toggle toggle-accent" 
-                                        type="checkbox"
-                                        checked={status}
-                                        onChange={(e) => setStatus(e.target.checked)}
-                                    />
-                                    </label>
-                                </div>
-                                
-                                {status === true && (
-                                    
-                                    <div className="form-control mt-4">
                                     <label className="label">
-                                        <span className="label-text">Activation Date</span>
-                                    </label>
-                                    <input
-                                        className="input input-bordered"
-                                        type="date"
-                                        required={status}
-                                        value={activation_date ? formatDateForInput(activation_date) : ''}   
-                                        onChange={(e) => setActivationDate(e.target.value)}
-                                        />
-                                    </div>
-                                )}
+                                <span className="label-text">Activation Date</span>
+                                </label>
+                                <input
+                                    className="input input-bordered"
+                                    type="date"
+                                    placeholder="Activation Date"
+                                    required={status === 'Active'}
+                                    value={activation_date || ''}   
+                                    onChange={(e) => setActivationDate(e.target.value)}
+                                    />
+                                </div>
 
                                 <div className="form-control mt-4">
                                 <label className="label">
@@ -437,16 +443,7 @@ const EditService = () => {
                                     />
                                     </label>
                                 </div>
-                                {/* <label className="label">
-                                    <span className="label-text">Managed by Fluent Living?</span>
-                                </label>
-                                <input
-                                    className="input input-bordered"
-                                    type="text"
-                                    placeholder="Fluent Living"
-                                    value={fluentLiving}   
-                                    onChange={(e) => setFluentLiving(e.target.value)}
-                                /> */}
+                                </div>
                             </div>
                         </div>
 
@@ -458,7 +455,7 @@ const EditService = () => {
                     </form>
                     {/* Success message */}
                     {showSuccess && (
-                    <div className="mt-4 p-4 bg-green-100 text-green-800 border border-green-300 rounded">
+                    <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
                         ✅ Service updated successfully!
                     </div>
                     )}
