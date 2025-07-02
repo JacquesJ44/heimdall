@@ -1,6 +1,7 @@
 import { useEffect, useState, Fragment } from "react";
 import { Link } from "react-router-dom";
-import axios from './AxiosInstance'
+import axios from './AxiosInstance';
+import { CheckCircle, XCircle, PauseCircle, Plus } from "lucide-react";
 
 const Services = () => {
     
@@ -85,7 +86,7 @@ const Services = () => {
 
                     {/* Add New Service Button */}
                     <Link to="/services/addservice" className="btn btn-accent w-full sm:w-auto">
-                        Add New Service
+                        <Plus size={18} /> Add New Service
                     </Link>
                 </div>
                 
@@ -97,8 +98,6 @@ const Services = () => {
                             <th>GPON Serial</th>
                             <th>ONU Number</th>
                             <th>Customer Full Name</th>
-                            {/* <th>Contact Number</th> */}
-                            {/* <th>Email</th> */}
                             <th>Debit Order Status</th>
                             <th>Status</th>
                             <th>Package</th>
@@ -115,22 +114,40 @@ const Services = () => {
                             <td>{service.gpon_serial}</td>
                             <td>{service.onu_number}</td>
                             <td>{service.customer_fullname}</td>
-                            {/* <td>{service.contact_number}</td> */}
-                            {/* <td>{service.email}</td> */}
                             <td>{service.debit_order_status}</td>
                             <td>
                                 <span
-                                    className={`px-2 py-1 rounded-full text-sm font-semibold border ${
-                                    service.status
-                                        ? "text-green-600 border-green-600"
-                                        : "text-red-600 border-red-600"
+                                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold border ${
+                                    service.status === "Active"
+                                        ? "text-green-600 border-green-600 bg-green-50"
+                                        : service.status === "Inactive"
+                                        ? "text-red-600 border-red-600 bg-red-50"
+                                        : service.status === "Suspended"
+                                        ? "text-yellow-600 border-yellow-600 bg-yellow-50"
+                                        : "text-slate-500 border-slate-400 bg-slate-100"
                                     }`}
                                 >
-                                    {service.status ? "Active" : "Inactive"}
+                                    {service.status === "Active" && (
+                                    <>
+                                        <CheckCircle className="w-4 h-4" />
+                                        Active
+                                    </>
+                                    )}
+                                    {service.status === "Inactive" && (
+                                    <>
+                                        <XCircle className="w-4 h-4" />
+                                        Inactive
+                                    </>
+                                    )}
+                                    {service.status === "Suspended" && (
+                                    <>
+                                        <PauseCircle className="w-4 h-4" />
+                                        Suspended
+                                    </>
+                                    )}
                                 </span>
                             </td>
                             <td>{service.product_name}</td>
-                            
                             <td>
                                 <button
                                 className="btn btn-sm btn-outline"
@@ -166,9 +183,9 @@ const Services = () => {
                                         <p><strong>ONU Model:</strong> {service.onu_model}</p>
                                         <p><strong>ONU Serial:</strong> {service.onu_serial}</p>
                                         <p><strong>Light Level:</strong> {service.light_level}</p>
-                                        <p>---------------</p>
                                         <p><strong>PPPoE Username:</strong> {service.pppoe_un}</p>
                                         <p><strong>PPPoE Password:</strong> {service.pppoe_pw}</p>
+                                        <p>---------------</p>
                                         <p><strong>2.4GHz SSID:</strong> {service.ssid_24ghz}</p>
                                         <p><strong>2.4GHz Password:</strong> {service.password_24ghz}</p>
                                         <p><strong>5GHz SSID:</strong> {service.ssid_5ghz}</p>
@@ -212,14 +229,7 @@ const Services = () => {
                 )}
 
                 {showSuccess && (
-                    <div style={{
-                    padding: '10px',
-                    marginTop: '10px',
-                    backgroundColor: '#d4edda',
-                    color: '#155724',
-                    border: '1px solid #c3e6cb',
-                    borderRadius: '5px'
-                    }}>
+                    <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
                     ✅ Service deleted successfully!
                     </div>
                 )}
