@@ -104,15 +104,8 @@ const Register = () => {
                         </div>
                     </form>
                     {showSuccess && (
-                                <div style={{
-                                padding: '10px',
-                                marginTop: '10px',
-                                backgroundColor: '#d4edda',
-                                color: '#155724',
-                                border: '1px solid #c3e6cb',
-                                borderRadius: '5px'
-                                }}>
-                                ✅ User added succesfully!
+                                <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
+                                ✅ User registered!
                                 </div>
                             )}
                 </div>

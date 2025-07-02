@@ -1,4 +1,7 @@
 import pymysql
+from datetime import datetime
+from flask import request
+
 class DbUtil:
     def __init__(self, config):
         self.config = config 
@@ -120,7 +123,7 @@ class DbUtil:
                     'UPDATE sites SET name = %s, street = %s, suburb = %s WHERE id = %s', (name, street, suburb, id)
                 )
                 con.commit()
-                print("c.rowcount:", c.rowcount)
+                # print("c.rowcount:", c.rowcount)
                 return c.rowcount
         finally:
             con.close()
@@ -132,7 +135,7 @@ class DbUtil:
         try:
             with con.cursor() as c:
                 c.execute("DELETE FROM sites WHERE id = %s", (site_id,))
-                self.con.commit()
+                con.commit()
                 return c.rowcount > 0
         except Exception as e:
             print("DB error:", e)
@@ -419,5 +422,42 @@ class DbUtil:
                 # print("Query result:", rows)
                 col_names = [c[0] for c in c.description]
                 return [dict(zip(col_names, row)) for row in rows]
+        finally:
+            con.close()
+
+    def log_action(self, user_id, action, target_table=None, target_id=None, details=None):
+        con = self.get_connection()
+        
+        ip_address = request.remote_addr
+        user_agent = request.headers.get('User-Agent')
+        timestamp = datetime.now()
+
+        try:
+            with con.cursor() as c:
+                query = """
+                    INSERT INTO user_logs (user_id, action, target_table, target_id, ip_address, user_agent, timestamp, details)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                c.execute(query, (user_id, action, target_table, target_id, ip_address, user_agent, timestamp, details))
+                con.commit()
+                return c.lastrowid
+        finally:
+            con.close()
+
+    def view_logs(self):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                query = """
+                    SELECT id, user_id, action, target_table, target_id, ip_address, timestamp, details
+                    FROM user_logs
+                    ORDER BY timestamp DESC
+                    LIMIT 100
+                """
+                c.execute(query)
+                logs = c.fetchall()
+                col_names = [c[0] for c in c.description]
+                return [dict(zip(col_names, log)) for log in logs]
         finally:
             con.close()
