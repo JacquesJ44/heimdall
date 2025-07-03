@@ -61,7 +61,7 @@ const AddService = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-          const response = await axios.post('heimdall/api/services/addservice', { site_id, unit_number, onu_make, onu_model, onu_serial, onu_number, gpon_serial, status, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5ghz, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living: fluent_living ? fluent_living : 0, product_id, activation_date, comments });
+          const response = await axios.post('/heimdall/api/services/addservice', { site_id, unit_number, onu_make, onu_model, onu_serial, onu_number, gpon_serial, status, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5ghz, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living: fluent_living ? fluent_living : 0, product_id, activation_date, comments });
         //   console.log(response.data);
           setShowSuccess(true);
           // Wait 1.5 seconds before reloading
