@@ -179,7 +179,7 @@ def login():
     # print(data)
     
     row = db.get_user_by_email(data['email'])
-    pprint(row)
+    # pprint(row)
 
     if not row:
        return jsonify({"msg": "User with this email does not exist"}), 400
