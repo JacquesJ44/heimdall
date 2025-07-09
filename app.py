@@ -31,7 +31,7 @@ db = DbUtil({
     'db': os.getenv('DB_NAME')
 })
 
-app = Flask(__name__, static_url_path="/heimdall/static") # Path to your React build folder
+app = Flask(__name__, static_folder='/home/pi/Documents/heimdall/heimdall-fe/build', static_url_path="/heimdall/static") 
 
 # Secret Keys
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -169,7 +169,7 @@ def refresh_expiring_jwts(response):
         return response
 
 #Login route 
-@app.route('/api/login', methods=['POST'])
+@app.route('/heimdall/api/login', methods=['POST'])
 def login():
 
     if not request.is_json:
@@ -179,7 +179,7 @@ def login():
     # print(data)
     
     row = db.get_user_by_email(data['email'])
-    pprint(row)
+    # pprint(row)
 
     if not row:
        return jsonify({"msg": "User with this email does not exist"}), 400
@@ -203,7 +203,7 @@ def login():
 
     return jsonify(access_token=access_token)
 
-@app.route("/api/register", methods=["POST"])
+@app.route("/heimdall/api/register", methods=["POST"])
 def register():
     data = request.get_json()
     # print(data)
@@ -221,7 +221,7 @@ def register():
     return jsonify({"msg": "Registration successful"})
 
 # See all sites
-@app.route("/api/sites", methods=["GET"])
+@app.route("/heimdall/api/sites", methods=["GET"])
 @jwt_required()
 def sites():
     x = db.get_all_sites()
@@ -229,7 +229,7 @@ def sites():
     return jsonify(x)
     
 # Add a site
-@app.route("/api/sites/addsite", methods=["POST"])
+@app.route("/heimdall/api/sites/addsite", methods=["POST"])
 @jwt_required()
 def add_site():
     data = request.get_json()
@@ -244,7 +244,7 @@ def add_site():
         return jsonify({'message': 'Site added successfully'}), 200
 
 # Delete a site
-@app.route("/api/sites/deletesite", methods=["DELETE"])
+@app.route("/heimdall/api/sites/deletesite", methods=["DELETE"])
 @jwt_required()
 def delete_site():
     data = request.get_json()
@@ -261,7 +261,7 @@ def delete_site():
         return jsonify({'error': 'Site not found or failed to delete'}), 404
 
 # Edit a site 
-@app.route("/api/sites/editsite/<int:site_id>", methods=["GET", "PUT"]) 
+@app.route("/heimdall/api/sites/editsite/<int:site_id>", methods=["GET", "PUT"]) 
 @jwt_required()
 def edit_site(site_id):
     if request.method == "GET":
@@ -281,7 +281,7 @@ def edit_site(site_id):
             return jsonify({'error': 'No changes made'}), 404
     
 # See all products
-@app.route("/api/products", methods=["GET"])
+@app.route("/heimdall/api/products", methods=["GET"])
 @jwt_required()
 def products():
     x = db.get_all_products()
@@ -289,7 +289,7 @@ def products():
     return jsonify(x)
 
 # Add a product
-@app.route("/api/products/addproduct", methods=["POST"])
+@app.route("/heimdall/api/products/addproduct", methods=["POST"])
 @jwt_required()
 def add_product():
     data = request.get_json()
@@ -311,7 +311,7 @@ def add_product():
     return jsonify({'message': 'Product added successfully'}), 200
 
 # Delete a product
-@app.route("/api/products/deleteproduct", methods=["DELETE"])
+@app.route("/heimdall/api/products/deleteproduct", methods=["DELETE"])
 @jwt_required()
 def delete_product():
     data = request.get_json()
@@ -328,7 +328,7 @@ def delete_product():
         return jsonify({'error': 'Product not found or failed to delete'}), 404
     
 # Edit a product
-@app.route("/api/products/editproduct/<int:product_id>", methods=["GET", "PUT"])
+@app.route("/heimdall/api/products/editproduct/<int:product_id>", methods=["GET", "PUT"])
 @jwt_required()
 def edit_product(product_id):
     if request.method == "GET":
@@ -360,7 +360,7 @@ def edit_product(product_id):
         return jsonify({'msg': 'An Error Ocurred while updating product'}), 404
     
 # See all services
-@app.route("/api/services", methods=["GET"])
+@app.route("/heimdall/api/services", methods=["GET"])
 @jwt_required()
 def services():
     x = db.get_all_services()
@@ -368,7 +368,7 @@ def services():
     return jsonify(x)
 
 # Add a service
-@app.route("/api/services/addservice", methods=["POST"])
+@app.route("/heimdall/api/services/addservice", methods=["POST"])
 @jwt_required()
 def add_service():
     data = request.get_json()
@@ -444,7 +444,7 @@ def add_service():
     return jsonify({'message': 'Service added successfully'}), 200
 
 # Edit a service 
-@app.route("/api/services/editservice/<int:service_id>", methods=["GET", "PUT"])
+@app.route("/heimdall/api/services/editservice/<int:service_id>", methods=["GET", "PUT"])
 @jwt_required()
 def edit_service(service_id):
     if request.method == "GET":
@@ -501,7 +501,7 @@ def edit_service(service_id):
             return jsonify({'error': 'No changes made'}), 404
 
 # Delete a service
-@app.route("/api/services/deleteservice", methods=["DELETE"])
+@app.route("/heimdall/api/services/deleteservice", methods=["DELETE"])
 @jwt_required()
 def delete_service():
     data = request.get_json()
@@ -518,7 +518,7 @@ def delete_service():
         return jsonify({'error': 'Site not found or failed to delete'}), 404
 
 # Dashboard Route - for displaying pie chart data
-@app.route("/api/dashboard", methods=["GET"])
+@app.route("/heimdall/api/dashboard", methods=["GET"])
 @jwt_required()
 def dashboard():
     x = db.pie_chart_data()
@@ -538,7 +538,7 @@ def dashboard():
     return jsonify(chart_data)
 
 # Drill into a site from the dashboard
-@app.route("/api/dashboard/site/<string:site>", methods=["GET"])
+@app.route("/heimdall/api/dashboard/site/<string:site>", methods=["GET"])
 @jwt_required()
 def dashboard_site(site):
     site = unquote(site) # Decode the site name
@@ -560,7 +560,7 @@ def dashboard_site(site):
     })
 
 # Route for calculating of active services in the current month
-@app.route("/api/dashboard/site/<string:site>/po", methods=["GET"])
+@app.route("/heimdall/api/dashboard/site/<string:site>/po", methods=["GET"])
 @jwt_required()
 def calculate_po(site):
     site = unquote(site)
@@ -608,7 +608,7 @@ def calculate_po(site):
     return jsonify(result)
 
 # Calulate prorata rates for the services in the previous month
-@app.route("/api/dashboard/site/<string:site>/prorata", methods=["GET"])
+@app.route("/heimdall/api/dashboard/site/<string:site>/prorata", methods=["GET"])
 @jwt_required()
 def calculate_prorata(site):
     site = unquote(site)
@@ -669,7 +669,7 @@ def calculate_prorata(site):
     # pprint(prorata_services)
     return jsonify(prorata_services)
 
-@app.route("/api/dashboard/site/<string:site>/fluent_living", methods=["GET"])
+@app.route("/heimdall/api/dashboard/site/<string:site>/fluent_living", methods=["GET"])
 @jwt_required()
 def fluent_living(site):
     site = unquote(site)
@@ -679,7 +679,7 @@ def fluent_living(site):
     return jsonify(services)
 
 # Route for the navbar
-@app.route("/api/navbar")
+@app.route("/heimdall/api/navbar")
 @jwt_required()
 def navbar():
     current_user = get_jwt_identity()
@@ -687,7 +687,7 @@ def navbar():
     return jsonify(logged_in_as=current_user)
 
 # Route for forgotten password
-@app.route('/api/forgot-password', methods=['POST'])
+@app.route('/heimdall/api/forgot-password', methods=['POST'])
 def forgot_password():
     data = request.get_json()
     email = data.get('email')
@@ -697,7 +697,7 @@ def forgot_password():
     if user:
         token = serializer.dumps(email, salt='password-reset')
         # reset_url = url_for('reset_password', token=token, _external=True)
-        reset_url = f"http://localhost:3000/reset-password/{token}"
+        reset_url = f"http://192.168.99.218/heimdall/reset-password/{token}"
 
         # Launch email sending in a background thread
         Thread(target=send_reset_email, args=(app, email, reset_url)).start()
@@ -725,7 +725,7 @@ def send_reset_email(app, email, reset_url):
             print("Failed to send email:", e)
 
 # Route for password reset
-@app.route('/api/reset-password/<token>', methods=['POST'])
+@app.route('/heimdall/api/reset-password/<token>', methods=['POST'])
 def reset_password(token):
     data = request.get_json()
     new_password = data.get('new_password')  # Make sure to hash this in production
@@ -742,7 +742,7 @@ def reset_password(token):
     return jsonify({'message': 'Password reset successfully'}), 200
 
 #Logout route
-@app.route("/api/logout", methods=["POST"])
+@app.route("/heimdall/api/logout", methods=["POST"])
 def logout():
     response = jsonify({"msg": "logout successful"})
     unset_jwt_cookies(response)
@@ -761,8 +761,8 @@ def view_logs():
         return jsonify({"error": str(e)}), 500
 
 # This route will serve the React app - this helps for routing in the Production environment
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
+@app.route("/heimdall", defaults={"path": ""})
+@app.route("/heimdall/<path:path>")
 def serve(path):
     # Exclude API routes from being caught here
     if path.startswith("api") or path.startswith("static") or path.endswith(('.js', '.css', '.json', '.ico', '.png')):
