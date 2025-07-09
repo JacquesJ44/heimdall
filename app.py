@@ -506,13 +506,48 @@ def edit_service(service_id):
 def delete_service():
     data = request.get_json()
     # print(data)
+
     service_id = data.get('id')
     if not service_id:
         return jsonify({'error': 'Missing service ID'}), 400
 
+    # Get user info (if available)
+    user = get_jwt_identity()  # assuming JWT stores the username or email
+
+    # Fetch service details before deleting (optional but good for email context)
+    service = db.get_service_by_id(service_id)  
+
     success = db.delete_service(service_id)
     
     if success:
+        # Send email notification
+        try:
+            service_info = f"""
+                <p><strong>Service ID:</strong> {service_id}</p>
+                <p><strong>Customer:</strong> {service.get('customer_fullname', 'N/A')}</p>
+                <p><strong>Contact:</strong> {service.get('contact_number', 'N/A')}</p>
+                <P><strong>ONU Make:</strong> {service.get('onu_make', 'N/A')}</p>
+                <p><strong>ONU Model:</strong> {service.get('onu_model', 'N/A')}</p>
+                <p><strong>ONU Serial:</strong> {service.get('onu_serial', 'N/A')}</p>
+                <p><strong>Status Before Deletion:</strong> {service.get('status', 'N/A')}</p>
+                <p><strong>Deleted By:</strong> {user}</p>
+                <p><strong>Timestamp:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            """
+
+            msg = Message(
+                subject="URGENT WARNING: Service Deleted",  # Subject can't be bold, but message body can
+                sender=app.config['MAIL_DEFAULT_SENDER'],
+                recipients=["jacquesj44@gmail.com"],
+                html=f"""
+                    <h2 style="color: red;">⚠️ Urgent Warning: Service Deleted</h2>
+                    <p>This is to inform you that a service has been <strong>permanently deleted</strong>.</p>
+                    {service_info}
+                    <p style="color: red;"><strong>This action is irreversible.</strong></p>
+                """
+            )
+            mail.send(msg)
+        except Exception as e:
+            print(f"Failed to send deletion email: {str(e)}")
         return jsonify({'message': 'Site deleted successfully'}), 200
     else:
         return jsonify({'error': 'Site not found or failed to delete'}), 404
