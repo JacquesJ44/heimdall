@@ -2,6 +2,8 @@ import pymysql
 from datetime import datetime
 from flask import request
 
+import pprint 
+
 class DbUtil:
     def __init__(self, config):
         self.config = config 
@@ -54,6 +56,31 @@ class DbUtil:
                 con.commit()
         finally:
             con.close()
+
+    # Get all email addresses associated with a particular building
+    def get_mail(self, site_id):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute("""
+                    SELECT 
+                        GROUP_CONCAT(DISTINCT email SEPARATOR ', ') AS emails
+                    FROM 
+                        services
+                    JOIN 
+                        sites s ON services.site_id = s.id
+                    WHERE 
+                        s.id = %s
+                        AND email IS NOT NULL 
+                        AND email != '';
+                """, (site_id,))
+                
+                result = c.fetchall()
+                return result[0] if result and result[0] else None
+        finally:
+            con.close()
+
     
     # DB OPS WITH SITES
     # Save a new site
