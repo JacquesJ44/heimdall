@@ -99,9 +99,14 @@ const Register = () => {
                                 onChange={(e) => setConfirmPassword(e.target.value)} 
                             />
                         </div>
+
                         <div className="form-control mt-6">
-                            <button className="btn btn-accent">Create User</button>
+                            <div className="flex justify-between">
+                                <button className="btn btn-accent">Create User</button>
+                                <button type="button" className="btn btn-warning" onClick={() => navigate("/register/users")}>Manage Users</button>
+                            </div>
                         </div>
+
                     </form>
                     {showSuccess && (
                                 <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">

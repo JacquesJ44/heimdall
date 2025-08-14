@@ -2,6 +2,8 @@ import pymysql
 from datetime import datetime
 from flask import request
 
+import pprint 
+
 class DbUtil:
     def __init__(self, config):
         self.config = config 
@@ -33,15 +35,17 @@ class DbUtil:
     # Search for a user in the users table
     def get_user_by_email(self, email):
         con = self.get_connection()
-
         try:
             with con.cursor() as c:
-                c.execute(
-                    'SELECT * FROM users WHERE email = %s', (email,)
-                )
-                return c.fetchone()
+                c.execute('SELECT * FROM users WHERE email = %s', (email,))
+                row = c.fetchone()
+                if row is None:
+                    return None
+                col_names = [desc[0] for desc in c.description]
+                return dict(zip(col_names, row))
         finally:
             con.close()
+
 
     def update_forgotten_pw(self, email, password):
         con = self.get_connection()
@@ -54,6 +58,46 @@ class DbUtil:
                 con.commit()
         finally:
             con.close()
+
+    # Get all email addresses associated with a particular building
+    def get_mail(self, site_id):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute("""
+                    SELECT 
+                        GROUP_CONCAT(DISTINCT email SEPARATOR ', ') AS emails
+                    FROM 
+                        services
+                    JOIN 
+                        sites s ON services.site_id = s.id
+                    WHERE 
+                        s.id = %s
+                        AND email IS NOT NULL 
+                        AND email != '';
+                """, (site_id,))
+                
+                result = c.fetchall()
+                return result[0] if result and result[0] else None
+        finally:
+            con.close()
+
+    # Get all users
+    def get_all_users(self):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    'SELECT * FROM users;'
+                )
+                rows = c.fetchall()
+                col_names = [c[0] for c in c.description]
+                return [dict(zip(col_names, row)) for row in rows]
+        finally:
+            con.close()
+
     
     # DB OPS WITH SITES
     # Save a new site
@@ -361,10 +405,34 @@ class DbUtil:
                     GROUP BY sites.name, products.name
                 """)
                 rows = c.fetchall()
-                col_names = [c[0] for c in c.description]
+                col_names = [col[0] for col in c.description]
                 return [dict(zip(col_names, row)) for row in rows]
         finally:
             con.close()
+
+
+    def pie_chart_data_for_user(self, user_id):
+        con = self.get_connection()
+        try:
+            with con.cursor() as c:
+                c.execute("""
+                    SELECT 
+                        sites.name AS site_name,
+                        products.name AS package_name,
+                        COUNT(*) AS value
+                    FROM services
+                    JOIN sites ON services.site_id = sites.id
+                    JOIN products ON services.product_id = products.id
+                    JOIN client_site_access ON client_site_access.site_id = sites.id
+                    WHERE client_site_access.user_id = %s
+                    GROUP BY sites.name, products.name
+                """, (user_id,))
+                rows = c.fetchall()
+                col_names = [col[0] for col in c.description]
+                return [dict(zip(col_names, row)) for row in rows]
+        finally:
+            con.close()
+
 
     def services_per_site(self, site):
         con = self.get_connection()
@@ -424,6 +492,48 @@ class DbUtil:
                 return [dict(zip(col_names, row)) for row in rows]
         finally:
             con.close()
+
+    def assign_sites_to_user(self, user_id, site_ids):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                # Step 1: Remove existing assignments
+                c.execute("DELETE FROM client_site_access WHERE user_id = %s", (user_id,))
+
+                # Step 2: Insert new assignments
+                if site_ids:
+                    values = [(user_id, site_id) for site_id in site_ids]
+                    c.executemany(
+                        "INSERT INTO client_site_access (user_id, site_id) VALUES (%s, %s)",
+                        values
+                    )
+            con.commit()
+            return len(site_ids)
+        finally:
+            con.close()
+
+    def get_accessible_sites(self, user_id, role):
+        """
+        Returns list of sites accessible by the given user_id.
+        Admin/Staff get all sites; Clients get only assigned sites.
+        """
+        con = self.get_connection()
+        try:
+            with con.cursor() as c:
+                c.execute("""
+                    SELECT s.* 
+                    FROM sites s
+                    INNER JOIN client_site_access csa ON s.id = csa.site_id
+                    WHERE csa.user_id = %s
+                    ORDER BY s.name
+                """, (user_id,))
+            rows = c.fetchall()
+            col_names = [col[0] for col in c.description]
+            return [dict(zip(col_names, row)) for row in rows]
+        finally:
+            con.close()
+
 
     def log_action(self, user_id, action, target_table=None, target_id=None, details=None):
         con = self.get_connection()

@@ -18,7 +18,6 @@ import os
 from pprint import pprint
 from urllib.parse import unquote
 
-# Load variables from .env
 load_dotenv()
 
 from utils import describe_changes_log
@@ -50,84 +49,6 @@ serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 jwt = JWTManager(app)
 mail = Mail(app)
-
-con = db.get_connection()
-
-cur = con.cursor()
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INT(5) PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(50),
-        surname VARCHAR(50),
-        email VARCHAR(50) UNIQUE,
-        password VARCHAR(200)
-    )
- """)
-
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS sites (
-        id INT(5) PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(50) UNIQUE,
-        street VARCHAR(50),
-        suburb VARCHAR(50)
-    )
- """)
-
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS products (
-        id INT(5) PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(50) UNIQUE,
-        selling_price DECIMAL(5,2),
-        cost_price DECIMAL(5,2)
-    )
-""")
-
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS services (
-        id INT(5) PRIMARY KEY AUTO_INCREMENT,
-        site_id INT(5),
-        unit_number VARCHAR(25),
-        onu_make VARCHAR(50),
-        onu_model VARCHAR(50),
-        onu_serial VARCHAR(50),
-        onu_number VARCHAR(20),
-        gpon_serial VARCHAR(50),
-        status VARCHAR(20),
-        light_level VARCHAR(10),
-        pppoe_un VARCHAR(20),
-        pppoe_pw VARCHAR(20),
-        ssid_24ghz VARCHAR(50),
-        password_24ghz VARCHAR(50),
-        ssid_5ghz VARCHAR(50),
-        password_5ghz VARCHAR(50),
-        customer_fullname VARCHAR(100),
-        contact_number VARCHAR(50),
-        email VARCHAR(100),
-        debit_order_status VARCHAR(50),
-        fluent_living BOOLEAN,
-        product_id INT(5),
-        activation_date DATE,
-        comments VARCHAR(255),
-        FOREIGN KEY (product_id) REFERENCES products(id),
-        FOREIGN KEY (site_id) REFERENCES sites(id)
-    )
-""")   
-
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS user_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id VARCHAR(150) NOT NULL,
-    action VARCHAR(255) NOT NULL,
-    target_table VARCHAR(100),
-    target_id INT,
-    ip_address VARCHAR(45),
-    user_agent TEXT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    details TEXT
-)
-""")
-         
-con.close()
 
 # Hash the password
 def hash_password(password):
@@ -184,29 +105,41 @@ def login():
     if not row:
        return jsonify({"msg": "User with this email does not exist"}), 400
 
-    if not verify_password(row[4], data['password']):
+    if not verify_password(row['password'], data['password']):
         return jsonify({"msg": "Invalid credentials"}), 401
 
-    access_token = create_access_token(identity=data['email'])
+     # ✅ Create JWT token with role + id
+    access_token = create_access_token(
+                                        identity=str(row['id']),
+                                        additional_claims={
+                                            "email": row['email'],
+                                            "role": row['role']
+                                        },
+                                        fresh=True
+                                    )
+
 
     # ✅ Log the login
     try:
         db.log_action(
-            user_id=row[0],
+            user_id=row['email'],
             action="login",
             target_table="users",
-            target_id=row[0],
-            details=f"{row[3]} logged in successfully.",
+            target_id=row['id'],
+            details=f"{row['name']} {row['surname']} logged in successfully.",
         )
     except Exception as e:
         print(f"⚠️ Logging error: {e}")
 
-    return jsonify(access_token=access_token)
+    # pprint(access_token)
+
+    # ✅ Return token in JSON
+    return jsonify({"access_token": access_token}), 200
 
 @app.route("/heimdall/api/register", methods=["POST"])
 def register():
     data = request.get_json()
-    # print(data)
+    pprint(data)
 
     row = db.get_user_by_email(data['email'])
     if row is not None:
@@ -219,6 +152,39 @@ def register():
     db.save_user(data['name'], data['surname'], data['email'], secured_password)
 
     return jsonify({"msg": "Registration successful"})
+
+@app.route("/api/register/users", methods=["GET"])
+def register_user():
+    rows = db.get_all_users()
+    # print("ROUTE HIT ✅")
+    
+    return jsonify(rows)
+
+@app.route("/api/register/users/<int:user_id>/sites", methods=["GET", "POST"])
+@jwt_required()
+def manage_user_sites(user_id):
+    claims = get_jwt()
+    role = claims.get("role")
+
+    if request.method == "GET":
+        try:
+            sites = db.get_accessible_sites(user_id, role)
+            return jsonify(sites), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    elif request.method == "POST":
+        data = request.get_json()
+        site_ids = data.get("site_ids", [])
+
+        if not isinstance(site_ids, list):
+            return jsonify({"error": "site_ids must be a list"}), 400
+
+        try:
+            db.assign_sites_to_user(user_id, site_ids)
+            return jsonify({"message": "Site Assignment Successful"}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
 # See all sites
 @app.route("/heimdall/api/sites", methods=["GET"])
@@ -523,7 +489,7 @@ def delete_service():
         # Send email notification
         try:
             service_info = f"""
-                <p><strong>Service ID:</strong> {service_id}</p>
+                <p><strong>ID:</strong> {service_id}</p>
                 <p><strong>Customer:</strong> {service.get('customer_fullname', 'N/A')}</p>
                 <p><strong>Contact:</strong> {service.get('contact_number', 'N/A')}</p>
                 <P><strong>ONU Make:</strong> {service.get('onu_make', 'N/A')}</p>
@@ -556,7 +522,22 @@ def delete_service():
 @app.route("/heimdall/api/dashboard", methods=["GET"])
 @jwt_required()
 def dashboard():
-    x = db.pie_chart_data()
+    claims = get_jwt()
+    user_id = claims.get("sub")
+    role = claims.get("role")
+
+    # pprint(claims)
+    # print("USER ID:", user_id)
+    # print("ROLE:", role)
+
+    if role in ("admin", "superadmin"):
+        # Admins get all pie chart data
+        x = db.pie_chart_data()
+    elif role == "client":
+        # Clients get pie chart data only for assigned sites
+        x = db.pie_chart_data_for_user(user_id)
+    else:
+        return jsonify({"msg": "Unauthorized"}), 403
 
     chart_data = {}
 
@@ -717,9 +698,13 @@ def fluent_living(site):
 @app.route("/heimdall/api/navbar")
 @jwt_required()
 def navbar():
-    current_user = get_jwt_identity()
-    # print('current_user: ', current_user)
-    return jsonify(logged_in_as=current_user)
+    current_user_id = get_jwt_identity()
+    claims = get_jwt()
+    return jsonify({
+        "user_id": current_user_id,
+        "email": claims.get("email"),
+        "role": claims.get("role")
+    })
 
 # Route for forgotten password
 @app.route('/heimdall/api/forgot-password', methods=['POST'])
@@ -813,4 +798,4 @@ def serve(path):
 
 if __name__ == '__main__':
     CORS(app, supports_credentials=True, resource={r"/*": {"origins": "*"}})
-    app.run()
+    app.run(debug=True)

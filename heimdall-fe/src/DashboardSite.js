@@ -44,6 +44,7 @@ const DashboardSite = () => {
       axios.get(`/heimdall/api/dashboard/site/${id}/po`) // you’ll create this Flask route
         .then(response => {
           setPoData(response.data);
+          // console.log(response.data);
         })
         .catch(error => {
           console.error("Error calculating PO:", error);
@@ -55,6 +56,7 @@ const DashboardSite = () => {
       axios.get(`/heimdall/api/dashboard/site/${id}/prorata`) // you’ll create this Flask route
         .then(response => {
           setProrataData(response.data);
+          // console.log(response.data);
         })
         .catch(error => {
           console.error("Error calculating PO:", error);
@@ -66,6 +68,7 @@ const DashboardSite = () => {
         axios.get(`/heimdall/api/dashboard/site/${id}/fluent_living`) // you’ll create this Flask route
         .then(response => {
           setFluentLiving(response.data);
+          // console.log(response.data);
         })
         .catch(error => {
           console.error("Error retrieving data:", error);
@@ -98,7 +101,7 @@ const DashboardSite = () => {
                 {activeView === "services" && services.units && ( 
                  <> 
                   <h3 className="mt-8 mb-2 text-lg font-bold">All Services</h3>
-                  <TableExportButtons data={services.units} filename={`Services_${id}`} />
+                  <TableExportButtons data={services.units} filename={`Services_${id}`} tableType="unit" />
                   <UnitTable units={services.units} />
                  </>
                 )}
@@ -106,7 +109,7 @@ const DashboardSite = () => {
                 {activeView === "po_current_month" && poData && (
                  <>
                   <h3 className="mt-8 mb-2 text-lg font-bold">Purchase Order - Current Month</h3>
-                  <TableExportButtons data={poData} filename={`PO_${id}`} />
+                  <TableExportButtons data={poData} filename={`PO_${id}`} tableType="po" />
                   <POTable data={poData} />
                  </>
                 )}
@@ -114,7 +117,7 @@ const DashboardSite = () => {
                 {activeView === "prorata" && prorataData && (
                  <>
                   <h3 className="mt-8 mb-2 text-lg font-bold">Pro Rata - Previous Month</h3>
-                  <TableExportButtons data={prorataData} filename={`Prorata_${id}`} />
+                  <TableExportButtons data={prorataData} filename={`Prorata_${id}`} tableType="prorata" />
                   <ProRataTable data={prorataData} />
                  </>
                 )}
@@ -122,7 +125,7 @@ const DashboardSite = () => {
                 {activeView === "fluent_living" && fluentLiving && (
                  <>
                   <h3 className="mt-8 mb-2 text-lg font-bold">Fluent Living</h3>
-                  <TableExportButtons data={fluentLiving} filename={`FluentLiving_${id}`} />
+                  <TableExportButtons data={fluentLiving} filename={`FluentLiving_${id}`} tableType="wifi" />
                   <FluentLivingTable units={fluentLiving} />
                  </>
                 )}
