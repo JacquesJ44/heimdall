@@ -153,14 +153,14 @@ def register():
 
     return jsonify({"msg": "Registration successful"})
 
-@app.route("/api/register/users", methods=["GET"])
+@app.route("/heimdall/api/register/users", methods=["GET"])
 def register_user():
     rows = db.get_all_users()
     # print("ROUTE HIT ✅")
     
     return jsonify(rows)
 
-@app.route("/api/register/users/<int:user_id>/sites", methods=["GET", "POST"])
+@app.route("/heimdall/api/register/users/<int:user_id>/sites", methods=["GET", "POST"])
 @jwt_required()
 def manage_user_sites(user_id):
     claims = get_jwt()
@@ -768,7 +768,7 @@ def logout():
     unset_jwt_cookies(response)
     return response
 
-@app.route('/api/logs', methods=['GET'])
+@app.route('/heimdall/api/logs', methods=['GET'])
 # @jwt_required()
 def view_logs():
     try:
