@@ -68,7 +68,7 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
   return (
     <div className="navbar sticky top-0 shadow-2xl bg-base-200 roundedborders">
       <div className="flex-1">
-        <img src="/aesirblue.png" className="App-logo" alt="logo" />
+        <img src="/heimdall/aesirblue.png" className="App-logo" alt="logo" />
       </div>
 
       <div className="flex-none">
