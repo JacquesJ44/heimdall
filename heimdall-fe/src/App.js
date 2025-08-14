@@ -10,6 +10,8 @@ import ResetPassword from './ResetPassword'
 import Dashboard from './Dashboard';
 import DashboardSite from './DashboardSite';
 import Register from './Register'
+import UserManagement from './UserManagement'
+import AssignSites from './AssignSites';
 import Sites from './Sites';
 import AddSite from './AddSite';
 import EditSite from './EditSite';
@@ -19,6 +21,7 @@ import EditProduct from './EditProduct';
 import Services from './Services';
 import AddService from './AddService';
 import EditService from './EditService';
+import { User } from 'lucide-react';
 
 function App() {
 
@@ -48,6 +51,14 @@ function App() {
             <Route path="/register" 
                     element={<PrivateRoute>
                               <Register />
+                            </PrivateRoute>}/>
+            <Route path="/register/users" 
+                    element={<PrivateRoute>
+                              <UserManagement />
+                            </PrivateRoute>}/>
+            <Route path="/register/users/:id/sites" 
+                    element={<PrivateRoute>
+                              <AssignSites />
                             </PrivateRoute>}/>
             <Route path="/sites" 
                     element={<PrivateRoute>

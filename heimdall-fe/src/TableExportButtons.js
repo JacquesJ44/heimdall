@@ -1,25 +1,128 @@
 import { CSVLink } from "react-csv";
 import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
-const TableExportButtons = ({ data, filename }) => {
+const formatDate = (value) => {
+  const date = new Date(value);
+  return isNaN(date)
+    ? value
+    : date.toLocaleDateString("en-ZA", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+};
+
+const formatCurrency = (value) => {
+  const num = parseFloat(value);
+  return isNaN(num) ? value : `R${num.toFixed(2)}`;
+};
+
+// Header + formatting rules per table type
+const tableConfigs = {
+  unit: {
+    headers: [
+      { key: "unit_number", label: "Unit" },
+      { key: "status", label: "Status" },
+      { key: "activation_date", label: "Activation Date", format: formatDate },
+      { key: "package", label: "Package" },
+      { key: "cost_price", label: "Cost Price", format: formatCurrency },
+      { key: "selling_price", label: "Selling Price", format: formatCurrency },
+      { key: "site_name", label: "Site" },
+    ],
+    includeTotal: false,
+  },
+  po: {
+    headers: [
+      { key: "package", label: "Package" },
+      { key: "cost_price", label: "Cost Price", format: formatCurrency },
+      { key: "count", label: "Count" },
+      { key: "total", label: "Total", format: formatCurrency },
+    ],
+    includeTotal: true,
+    totalField: "total",
+  },
+  prorata: {
+    headers: [
+      { key: "unit", label: "Unit" },
+      { key: "activation_date", label: "Activation Date", format: formatDate },
+      { key: "active_days", label: "Active Days" },
+      { key: "cost_price", label: "Cost Price", format: formatCurrency },
+      { key: "prorata_amount", label: "Pro Rata Amount", format: formatCurrency },
+      { key: "package", label: "Package" },
+    ],
+    includeTotal: true,
+    totalField: "total", // we'll calculate this from prorata_amount
+    totalFieldAlt: "prorata_amount",
+  },
+  wifi: {
+    headers: [
+      { key: "customer_fullname", label: "Customer" },
+      { key: "unit_number", label: "Unit" },
+      { key: "package", label: "Package" },
+      { key: "ssid_5ghz", label: "SSID (5GHz)" },
+      { key: "password_5ghz", label: "Password (5GHz)" },
+      { key: "ssid_24ghz", label: "SSID (2.4GHz)" },
+      { key: "password_24ghz", label: "Password (2.4GHz)" },
+      { key: "site_name", label: "Site" },
+    ],
+    includeTotal: false,
+  },
+};
+
+const TableExportButtons = ({ data = [], filename = "export", tableType }) => {
+  if (!data.length || !tableConfigs[tableType]) return null;
+
+  const { headers, includeTotal, totalField, totalFieldAlt } = tableConfigs[tableType];
+
+  const formatRow = (row) => {
+    const formatted = {};
+    headers.forEach(({ key, label, format }) => {
+      const val = row[key];
+      formatted[label] = format ? format(val) : val;
+    });
+    return formatted;
+  };
+
+  const formattedData = data.map(formatRow);
+
+  const getTotalRow = () => {
+    const key = totalFieldAlt || totalField;
+    const total = data.reduce((acc, row) => acc + (parseFloat(row[key]) || 0), 0);
+
+    const totalRow = {};
+    headers.forEach(({ key, label }) => {
+      totalRow[label] = key === key && (key === totalField || key === totalFieldAlt)
+        ? formatCurrency(total)
+        : "";
+    });
+
+    return totalRow;
+  };
+
   const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(data);
+    const exportData = [...formattedData];
+    if (includeTotal) exportData.push(getTotalRow());
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
     XLSX.writeFile(wb, `${filename}.xlsx`);
   };
 
-  const exportToPDF = async () => {
-    const jsPDF = (await import("jspdf")).default;
-    const autoTable = (await import("jspdf-autotable")).default;
-
+  const exportToPDF = () => {
     const doc = new jsPDF();
-    const headers = Object.keys(data[0] || {});
-    const rows = data.map((row) => headers.map((key) => row[key]));
+    const body = [...formattedData.map((row) => headers.map((h) => row[h.label]))];
+
+    if (includeTotal) {
+      const totalRow = getTotalRow();
+      body.push(headers.map((h) => totalRow[h.label] || ""));
+    }
 
     autoTable(doc, {
-      head: [headers],
-      body: rows,
+      head: [headers.map((h) => h.label)],
+      body,
     });
 
     doc.save(`${filename}.pdf`);
@@ -28,7 +131,7 @@ const TableExportButtons = ({ data, filename }) => {
   return (
     <div className="flex gap-2 mb-4">
       <CSVLink
-        data={data}
+        data={includeTotal ? [...formattedData, getTotalRow()] : formattedData}
         filename={`${filename}.csv`}
         className="btn btn-sm btn-primary"
       >
