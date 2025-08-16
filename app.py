@@ -14,6 +14,7 @@ import hashlib
 import binascii
 import json
 import os
+import re
 
 from pprint import pprint
 from urllib.parse import unquote
@@ -191,28 +192,56 @@ def manage_user_sites(user_id):
 @jwt_required()
 def sites():
     x = db.get_all_sites()
-    # print(x)
+    # pprint(x)
     return jsonify(x)
     
 # Add a site
 @app.route("/api/sites/addsite", methods=["POST"])
 @jwt_required()
 def add_site():
-    data = request.get_json()
-    # print(data)
-    row = db.get_site_by_name(data['name'])
-    # print(row)
+    data = request.get_json() or {}
 
+    # Validate required fields
+    required_fields = ['name', 'street', 'suburb']
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({"msg": f"Missing required field: {field}"}), 400
+
+    # Validate and clean running_cost
+    raw_cost = str(data.get('running_cost', '')).strip()
+
+    if raw_cost == "":
+        runningCost = Decimal('0.00')
+    else:
+        # Remove unwanted characters (e.g., "14.00d" → "14.00")
+        clean_cost = re.sub(r'[^0-9.\-]', '', raw_cost)
+        try:
+            runningCost = Decimal(clean_cost)
+        except (InvalidOperation, ValueError):
+            return jsonify({"msg": "Invalid running cost. Must be a valid decimal value."}), 400
+
+    # Check if site exists
+    row = db.get_site_by_name(data['name'])
     if row:
         return jsonify({"msg": "Site already exists!"}), 400
-    else:
-        db.save_site(data['name'], data['street'], data['suburb'])
-        return jsonify({'message': 'Site added successfully'}), 200
+
+    # Save site
+    db.save_site(data['name'], data['street'], data['suburb'], runningCost)
+    return jsonify({'message': 'Site added successfully'}), 200
 
 # Delete a site
 @app.route("/api/sites/deletesite", methods=["DELETE"])
 @jwt_required()
 def delete_site():
+
+    claims = get_jwt()  # full JWT claims
+    role = claims.get("role")
+    user = claims.get("sub") or get_jwt_identity()  # whoever is logged in
+
+    # 🔒 Restrict to superadmins only
+    if role != "superadmin":
+        return jsonify({"error": "Forbidden - only superadmins can delete services"}), 403
+    
     data = request.get_json()
     # print(data)
     site_id = data.get('id')
@@ -239,8 +268,21 @@ def edit_site(site_id):
 
     if request.method == "PUT":
         data = request.get_json()
-        # print(data)
-        success = db.edit_site(site_id, data['name'], data['street'], data['suburb'])
+        # pprint(data)
+
+        # Validate running_cost
+        raw_cost = str(data.get('running_cost', '')).strip()
+
+        # Remove anything except digits, decimal point, minus sign
+        clean_cost = re.sub(r'[^0-9.\-]', '', raw_cost)
+
+        try:
+            runningCost = Decimal(clean_cost)
+        except (InvalidOperation, ValueError):
+            return jsonify({"msg": "Invalid running cost. Must be a valid decimal value."}), 400
+
+        
+        success = db.edit_site(site_id, data['name'], data['street'], data['suburb'], runningCost)
         if success > 0: 
             return jsonify({'message': 'Site edited successfully'}), 200
         else:
@@ -280,6 +322,15 @@ def add_product():
 @app.route("/api/products/deleteproduct", methods=["DELETE"])
 @jwt_required()
 def delete_product():
+
+    claims = get_jwt()  # full JWT claims
+    role = claims.get("role")
+    user = claims.get("sub") or get_jwt_identity()  # whoever is logged in
+
+    # 🔒 Restrict to superadmins only
+    if role != "superadmin":
+        return jsonify({"error": "Forbidden - only superadmins can delete services"}), 403
+    
     data = request.get_json()
     # print(data)
     product_id = data.get('id')
@@ -470,6 +521,14 @@ def edit_service(service_id):
 @app.route("/api/services/deleteservice", methods=["DELETE"])
 @jwt_required()
 def delete_service():
+    claims = get_jwt()  # full JWT claims
+    role = claims.get("role")
+    user = claims.get("sub") or get_jwt_identity()  # whoever is logged in
+
+    # 🔒 Restrict to superadmins only
+    if role != "superadmin":
+        return jsonify({"error": "Forbidden - only superadmins can delete services"}), 403
+
     data = request.get_json()
     # print(data)
 
@@ -693,6 +752,32 @@ def fluent_living(site):
 
     #pprint(services)
     return jsonify(services)
+
+@app.route("/api/summary", methods=["GET"])
+@jwt_required()
+def summary():
+    claims = get_jwt()
+    user_id = claims.get("sub")
+    role = claims.get("role")
+
+    # pprint(claims)
+    # print("USER ID:", user_id)
+
+    if not user_id:
+        return jsonify({"msg": "Unauthorized"}), 401
+
+    if role == "superadmin":
+        rows = db.get_summary_for_user(None)  # None means no user filter
+    else:
+        rows = db.get_summary_for_user(user_id)
+
+    # Convert Decimal to float for JSON serialization
+    for row in rows:
+        row["running_cost"] = float(row["running_cost"] or 0.00)
+        row["total_revenue"] = float(row["total_revenue"] or 0.00)
+        row["net_profit"] = float(row["net_profit"] or 0.00)
+
+    return jsonify(rows), 200
 
 # Route for the navbar
 @app.route("/api/navbar")

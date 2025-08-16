@@ -7,6 +7,7 @@ const AddSite = () => {
     const [name, setName] = useState('');
     const [street, setStreet] = useState('');
     const [suburb, setSuburb] = useState('');
+    const [running_cost, setRunningCost] = useState('');
 
     const [showSuccess, setShowSuccess] = useState(false)
     
@@ -15,7 +16,7 @@ const AddSite = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-          const response = await axios.post('/api/sites/addsite', { name, street, suburb });
+          const response = await axios.post('/api/sites/addsite', { name, street, suburb, running_cost });
         //   console.log(response);
           setShowSuccess(true);
           // Wait 1.5 seconds before reloading
@@ -72,6 +73,19 @@ const AddSite = () => {
                                 required
                                 value = { suburb }
                                 onChange={(e) => setSuburb(e.target.value)}
+                                />
+                        </div>
+
+                        <div className="form-control mt-2">
+                            <label className="label">
+                                <span className="label-text">Running Cost</span>    
+                            </label>
+                            <input className="input input-bordered w-full max-w-xs"
+                                type="text" 
+                                placeholder="Running Cost"  
+                                // required
+                                value = { running_cost }
+                                onChange={(e) => setRunningCost(e.target.value)}
                                 />
                         </div>
 

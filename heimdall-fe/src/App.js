@@ -21,7 +21,7 @@ import EditProduct from './EditProduct';
 import Services from './Services';
 import AddService from './AddService';
 import EditService from './EditService';
-import { User } from 'lucide-react';
+import Summary from './Summary';
 
 function App() {
 
@@ -59,6 +59,10 @@ function App() {
             <Route path="/register/users/:id/sites" 
                     element={<PrivateRoute>
                               <AssignSites />
+                            </PrivateRoute>}/>
+            <Route path="/summary"
+                    element={<PrivateRoute>
+                              <Summary />
                             </PrivateRoute>}/>
             <Route path="/sites" 
                     element={<PrivateRoute>
