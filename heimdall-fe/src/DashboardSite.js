@@ -101,7 +101,7 @@ const DashboardSite = () => {
                 {activeView === "services" && services.units && ( 
                  <> 
                   <h3 className="mt-8 mb-2 text-lg font-bold">All Services</h3>
-                  <TableExportButtons data={services.units} filename={`Services_${id}`} tableType="unit" />
+                  <TableExportButtons data={services.units} filename={`Services_${id}`} tableType="unit" siteName={services.units[0].site_name} />
                   <UnitTable units={services.units} />
                  </>
                 )}
@@ -109,7 +109,7 @@ const DashboardSite = () => {
                 {activeView === "po_current_month" && poData && (
                  <>
                   <h3 className="mt-8 mb-2 text-lg font-bold">Purchase Order - Current Month</h3>
-                  <TableExportButtons data={poData} filename={`PO_${id}`} tableType="po" />
+                  <TableExportButtons data={poData} filename={`PO_${id}`} tableType="po" siteName={services.units[0].site_name} />
                   <POTable data={poData} />
                  </>
                 )}
@@ -117,7 +117,7 @@ const DashboardSite = () => {
                 {activeView === "prorata" && prorataData && (
                  <>
                   <h3 className="mt-8 mb-2 text-lg font-bold">Pro Rata - Previous Month</h3>
-                  <TableExportButtons data={prorataData} filename={`Prorata_${id}`} tableType="prorata" />
+                  <TableExportButtons data={prorataData} filename={`Prorata_${id}`} tableType="prorata" siteName={services.units[0].site_name} />
                   <ProRataTable data={prorataData} />
                  </>
                 )}
@@ -125,7 +125,7 @@ const DashboardSite = () => {
                 {activeView === "fluent_living" && fluentLiving && (
                  <>
                   <h3 className="mt-8 mb-2 text-lg font-bold">Fluent Living</h3>
-                  <TableExportButtons data={fluentLiving} filename={`FluentLiving_${id}`} tableType="wifi" />
+                  <TableExportButtons data={fluentLiving} filename={`FluentLiving_${id}`} tableType="wifi" siteName={services.units[0].site_name} />
                   <FluentLivingTable units={fluentLiving} />
                  </>
                 )}
