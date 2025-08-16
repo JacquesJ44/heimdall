@@ -22,6 +22,7 @@ const formatCurrency = (value) => {
 // Header + formatting rules per table type
 const tableConfigs = {
   unit: {
+    title: "Unit Report",
     headers: [
       { key: "unit_number", label: "Unit" },
       { key: "status", label: "Status" },
@@ -34,6 +35,7 @@ const tableConfigs = {
     includeTotal: false,
   },
   po: {
+    title: "Purchase Order",
     headers: [
       { key: "package", label: "Package" },
       { key: "cost_price", label: "Cost Price", format: formatCurrency },
@@ -44,6 +46,7 @@ const tableConfigs = {
     totalField: "total",
   },
   prorata: {
+    title: "Pro Rata Report",
     headers: [
       { key: "unit", label: "Unit" },
       { key: "activation_date", label: "Activation Date", format: formatDate },
@@ -53,10 +56,11 @@ const tableConfigs = {
       { key: "package", label: "Package" },
     ],
     includeTotal: true,
-    totalField: "total", // we'll calculate this from prorata_amount
+    totalField: "total",
     totalFieldAlt: "prorata_amount",
   },
   wifi: {
+    title: "WiFi Credentials",
     headers: [
       { key: "customer_fullname", label: "Customer" },
       { key: "unit_number", label: "Unit" },
@@ -71,7 +75,7 @@ const tableConfigs = {
   },
 };
 
-const TableExportButtons = ({ data = [], filename = "export", tableType }) => {
+const TableExportButtons = ({ data = [], filename = "export", tableType, siteName }) => {
   if (!data.length || !tableConfigs[tableType]) return null;
 
   const { headers, includeTotal, totalField, totalFieldAlt } = tableConfigs[tableType];
@@ -112,21 +116,47 @@ const TableExportButtons = ({ data = [], filename = "export", tableType }) => {
   };
 
   const exportToPDF = () => {
-    const doc = new jsPDF();
-    const body = [...formattedData.map((row) => headers.map((h) => row[h.label]))];
+    const doc = new jsPDF({
+      orientation: "landscape", // "portrait" is default
+      unit: "mm",               // measurement units
+      format: "a4",             // page size
+    });
 
+    const { title, headers } = tableConfigs[tableType];
+
+    // Grab site_name if available in the dataset
+    const siteDisplayName =
+      siteName || data[0]?.site_name ? ` – ${siteName || data[0]?.site_name}` : "";
+
+    const currentDate = new Date().toLocaleDateString("en-ZA", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+    // Heading + date
+    doc.setFontSize(14);
+    doc.text(`${title}${siteDisplayName}`, 14, 15);
+    doc.setFontSize(10);
+    doc.text(currentDate, 196, 15, { align: "right" });
+
+    // Build table body
+    const body = [...formattedData.map((row) => headers.map((h) => row[h.label]))];
     if (includeTotal) {
       const totalRow = getTotalRow();
       body.push(headers.map((h) => totalRow[h.label] || ""));
     }
 
+    // Table below heading
     autoTable(doc, {
       head: [headers.map((h) => h.label)],
       body,
+      startY: 25,
     });
 
     doc.save(`${filename}.pdf`);
   };
+
 
   return (
     <div className="flex gap-2 mb-4">

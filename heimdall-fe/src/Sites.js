@@ -59,7 +59,8 @@ const Sites = () => {
                             <tr>
                                 <th>Name</th> 
                                 <th>Street</th> 
-                                <th>Suburb</th> 
+                                <th>Suburb</th>
+                                <th>Running Cost</th> 
                                 <th>More Actions</th>
                             </tr>
                         </thead> 
@@ -69,6 +70,7 @@ const Sites = () => {
                                     <td>{site.name}</td>
                                     <td>{site.street}</td>
                                     <td>{site.suburb}</td>
+                                    <td>R{site.running_cost}</td>
                                     <td>
                                         <details className="dropdown dropdown-right dropdown-end">
                                         <summary className="m-1 btn ">...</summary>

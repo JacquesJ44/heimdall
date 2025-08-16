@@ -9,6 +9,7 @@ const EditSite = () => {
     const [name, setName] = useState('');
     const [street, setStreet] = useState('');
     const [suburb, setSuburb] = useState('');
+    const [running_cost, setRunningCost] = useState('');
 
     const [showSuccess, setShowSuccess] = useState(false)
     
@@ -22,6 +23,7 @@ const EditSite = () => {
             setName(data.name);
             setStreet(data.street);
             setSuburb(data.suburb);
+            setRunningCost(data.running_cost);
           })
           .catch(error => {
             console.error('Error fetching data:', error);
@@ -31,8 +33,8 @@ const EditSite = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-          const response = await axios.put(`/api/sites/editsite/${id}`, { name, street, suburb });
-          console.log(response);
+          const response = await axios.put(`/api/sites/editsite/${id}`, { name, street, suburb, running_cost });
+        //   console.log('RESPONSE:', response);
           setShowSuccess(true);
           // Wait 1.5 seconds before reloading
           setTimeout(() => {
@@ -84,6 +86,19 @@ const EditSite = () => {
                                 required
                                 value = { suburb }
                                 onChange={(e) => setSuburb(e.target.value)}
+                                />
+                        </div>
+
+                        <div className="form-control mt-2">
+                            <label className="label">
+                                <span className="label-text">Running Cost</span>    
+                            </label>
+                            <input className="input input-bordered w-full max-w-xs"
+                                type="text" 
+                                // placeholder="Suburb"  
+                                required
+                                value = { running_cost }
+                                onChange={(e) => setRunningCost(e.target.value)}
                                 />
                         </div>
 

@@ -98,16 +98,57 @@ class DbUtil:
         finally:
             con.close()
 
-    
+    def get_summary_for_user(self, user_id=None):
+        con = self.get_connection()
+        try:
+            with con.cursor() as c:
+                if user_id:
+                    # Filter by client_site_access for normal users
+                    c.execute("""
+                        SELECT 
+                            s.id AS site_id,
+                            s.name AS site_name,
+                            s.running_cost,
+                            COALESCE(SUM(p.cost_price), 0) AS total_revenue,
+                            COALESCE(SUM(p.cost_price), 0) - s.running_cost AS net_profit
+                        FROM client_site_access csa
+                        INNER JOIN sites s ON csa.site_id = s.id
+                        LEFT JOIN services sv ON s.id = sv.site_id
+                        LEFT JOIN products p ON sv.product_id = p.id
+                        WHERE csa.user_id = %s
+                        GROUP BY s.id, s.name, s.running_cost
+                        ORDER BY s.name ASC
+                    """, (user_id,))
+                else:
+                    # Superadmin sees all sites
+                    c.execute("""
+                        SELECT 
+                            s.id AS site_id,
+                            s.name AS site_name,
+                            s.running_cost,
+                            COALESCE(SUM(p.cost_price), 0) AS total_revenue,
+                            COALESCE(SUM(p.cost_price), 0) - s.running_cost AS net_profit
+                        FROM sites s
+                        LEFT JOIN services sv ON s.id = sv.site_id
+                        LEFT JOIN products p ON sv.product_id = p.id
+                        GROUP BY s.id, s.name, s.running_cost
+                        ORDER BY s.name ASC
+                    """)
+                rows = c.fetchall()
+                col_names = [c[0] for c in c.description]
+                return [dict(zip(col_names, row)) for row in rows]
+        finally:
+            con.close()
+
     # DB OPS WITH SITES
     # Save a new site
-    def save_site(self, name, street, suburb):
+    def save_site(self, name, street, suburb, running_cost):
         con = self.get_connection()
         
         try:
             with con.cursor() as c:
                 c.execute(
-                    'INSERT INTO sites (name, street, suburb) VALUES (%s, %s, %s)', (name, street, suburb)
+                    'INSERT INTO sites (name, street, suburb, running_cost) VALUES (%s, %s, %s, %s)', (name, street, suburb, running_cost)
                 ) 
                 con.commit()
                 return c.lastrowid
@@ -158,13 +199,13 @@ class DbUtil:
             con.close()
     
     # Edit a site
-    def edit_site(self, id, name, street, suburb):
+    def edit_site(self, id, name, street, suburb, running_cost):
         con = self.get_connection()
 
         try:
             with con.cursor() as c:
                 c.execute(
-                    'UPDATE sites SET name = %s, street = %s, suburb = %s WHERE id = %s', (name, street, suburb, id)
+                    'UPDATE sites SET name = %s, street = %s, suburb = %s, running_cost = %s WHERE id = %s', (name, street, suburb, running_cost, id)
                 )
                 con.commit()
                 # print("c.rowcount:", c.rowcount)
