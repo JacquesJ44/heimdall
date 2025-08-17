@@ -59,7 +59,7 @@ const Summary = () => {
             </tr>
           ))}
           {/* Totals Row */}
-          <tr className="font-bold bg-gray-50">
+          <tr className="font-bold bg-gray-50 dark:bg-gray-900">
             <td className="p-3">TOTAL</td>
             <td className="p-3">{formatCurrency(totalRevenue)}</td>
             <td className="p-3">{formatCurrency(totalRunning)}</td>
