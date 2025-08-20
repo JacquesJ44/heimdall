@@ -867,7 +867,7 @@ def view_logs():
         print("ERROR:", str(e))
         return jsonify({"error": str(e)}), 500
     
-@app.route("/api/send_bulk_email", methods=["POST"])
+@app.route("/heimdall/api/send_bulk_email", methods=["POST"])
 @jwt_required()
 def send_bulk_email():
     data = request.json
@@ -936,7 +936,7 @@ def send_bulk_email():
 
     return jsonify({"status": "success", "sent_to": sent_count}), 200
 
-@app.route("/api/bulk_email_history", methods=["GET"])
+@app.route("/heimdall/api/bulk_email_history", methods=["GET"])
 @jwt_required()
 def bulk_email_history():
     rows = db.get_last_bulk_emails()
