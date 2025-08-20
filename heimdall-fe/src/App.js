@@ -15,6 +15,7 @@ import AssignSites from './AssignSites';
 import Sites from './Sites';
 import AddSite from './AddSite';
 import EditSite from './EditSite';
+import BulkEmail from './BulkEmail';
 import Products from './Products';
 import AddProduct from './AddProduct';
 import EditProduct from './EditProduct';
@@ -75,6 +76,10 @@ function App() {
             <Route path="/sites/editsite/:id" 
                     element={<PrivateRoute>
                               <EditSite />
+                            </PrivateRoute>}/>            
+            <Route path="/sites/bulkemail" 
+                    element={<PrivateRoute>
+                              <BulkEmail />
                             </PrivateRoute>}/>            
             <Route path="/products" 
                     element={<PrivateRoute>
