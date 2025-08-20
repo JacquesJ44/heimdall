@@ -612,3 +612,43 @@ class DbUtil:
                 return [dict(zip(col_names, log)) for log in logs]
         finally:
             con.close()
+
+    def save_mail(self, site, subject, body_text, user_id):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:
+                c.execute(
+                    "INSERT INTO bulk_emails (site_id, subject, body, sent_by) VALUES (%s, %s, %s, %s)", (site, subject, body_text, user_id)
+                )
+                con.commit()
+                return c.lastrowid
+        finally:
+            con.close()
+
+    def get_last_bulk_emails(self, limit=20):
+        con = self.get_connection()
+
+        try:
+            with con.cursor() as c:  
+                sql = """
+                    SELECT 
+                        b.id,
+                        b.subject,
+                        b.body,
+                        b.sent_at,
+                        s.name AS site_name,
+                        CONCAT(u.name, ' ', u.surname) AS sent_by_name
+                    FROM bulk_emails b
+                    JOIN sites s ON b.site_id = s.id
+                    JOIN users u ON b.sent_by = u.id
+                    ORDER BY b.sent_at DESC
+                    LIMIT %s
+                """
+                c.execute(sql, (limit))
+                rows = c.fetchall()
+                col_names = [c[0] for c in c.description]
+                return [dict(zip(col_names, row)) for row in rows]
+                # return c.fetchall()
+        finally:
+            con.close()
