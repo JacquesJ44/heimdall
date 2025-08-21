@@ -6,4 +6,5 @@ pymysql
 python-dotenv
 reportlab
 pandas
+openpyxl
 

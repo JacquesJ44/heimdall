@@ -10,6 +10,7 @@ from calendar import monthrange
 from itsdangerous import URLSafeTimedSerializer
 from threading import Thread
 from dotenv import load_dotenv
+from jinja2 import Template
 import hashlib
 import binascii
 import json
@@ -45,6 +46,7 @@ app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
+# app.config['MAIL_SUPPRESS_SEND'] = True
 
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
@@ -864,6 +866,83 @@ def view_logs():
     except Exception as e:
         print("ERROR:", str(e))
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/api/send_bulk_email", methods=["POST"])
+@jwt_required()
+def send_bulk_email():
+    data = request.json
+    site_id = data.get("site_id")
+    body_text = data.get("body")
+    subject = data.get("subject")
+
+    claims = get_jwt()
+    user_id = claims.get("sub")
+
+    # Get tenants
+    raw_tenants = db.get_mail(site_id)   # returns tuple
+    if not raw_tenants or not raw_tenants[0]:
+        return jsonify({"status": "error", "msg": "No tenants found"}), 404
+
+    emails_string = raw_tenants[0]
+    tenants = [e.strip() for e in emails_string.split(",")]
+    # pprint(tenants)
+
+    # Get site name
+    site = db.get_site_by_id(site_id)
+    if site is None:
+        return jsonify({"status": "error", "msg": "Site not found"}), 404
+
+    # Convert newlines to <br> for HTML formatting
+    body_text_html = body_text.replace("\n", "<br>")
+
+    # Load template
+    with open("bulkmail.html") as f:
+        template = Template(f.read())
+
+    # Render template with formatted body
+    html_body = template.render(
+                                body_content=body_text_html,
+                                site_name=site['name'],
+                                subject=subject
+                            )
+    sent_count = 0
+    failed = []
+
+    with mail.connect() as conn_mail:
+        # for recipient in tenants:
+        msg = Message(
+            subject=f"{subject} - {site['name']}",
+            recipients=[os.getenv('MAIL_DEFAULT_SENDER')],
+            bcc=tenants,
+            html=html_body
+        )
+        try:
+            conn_mail.send(msg)
+            sent_count = len(tenants)
+        except Exception as e:
+            failed = [{"recipient": "ALL", "error": str(e)}]
+
+    # After sending
+    if sent_count > 0:
+        db.save_mail(site['id'], subject, body_text, user_id)  # set current_user_id from JWT
+
+    if failed:
+        return jsonify({
+            "status": "error",
+            "msg": f"Failed to send to {len(failed)} recipients",
+            "failed": failed,
+            "sent_to": sent_count
+        }), 500
+
+    return jsonify({"status": "success", "sent_to": sent_count}), 200
+
+@app.route("/api/bulk_email_history", methods=["GET"])
+@jwt_required()
+def bulk_email_history():
+    rows = db.get_last_bulk_emails()
+    # pprint(rows)
+   
+    return jsonify(rows)
 
 # This route will serve the React app - this helps for routing in the Production environment
 @app.route("/", defaults={"path": ""})

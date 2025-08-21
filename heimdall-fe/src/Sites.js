@@ -77,6 +77,7 @@ const Sites = () => {
                                         <ul className="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
                                             <li><Link to={'/sites/editsite/' + site.id}>Edit</Link></li>
                                             <li><button onClick={() => { setShowModal(true); setSiteToDelete(site.id) }}>Delete</button></li>
+                                            <li><Link to={'/sites/bulkemail'}>Send Bulk Email</Link></li>
                                         </ul>
                                         </details>
                                     </td>    
