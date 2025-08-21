@@ -5,5 +5,5 @@ flask-mail
 pymysql
 python-dotenv
 reportlab
-
+pandas
 
