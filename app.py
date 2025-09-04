@@ -32,13 +32,16 @@ db = DbUtil({
     'db': os.getenv('DB_NAME')
 })
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+REACT_BUILD_DIR = os.path.join(BASE_DIR, "heimdall-fe", "build")
+
 app = Flask(
     __name__,
-    static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "heimdall-fe", "build"),
-    static_url_path="/static"
+    static_folder=REACT_BUILD_DIR,
+    static_url_path=""
 )
 
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
+CORS(app, supports_credentials=True)
 
 # Secret Keys
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -951,18 +954,12 @@ def bulk_email_history():
     return jsonify(rows)
 
 # This route will serve the React app - this helps for routing in the Production environment
-# Catch-all route to serve React
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve(path):
-    full_path = os.path.join(app.static_folder, path)
-
-    # Serve static files if they exist
-    if os.path.exists(full_path):
-        return send_from_directory(app.static_folder, path)
-
-    # Serve React index.html for everything else
-    return send_from_directory(app.static_folder, "index.html")
+    if path != "" and os.path.exists(os.path.join(REACT_BUILD_DIR, path)):
+        return send_from_directory(REACT_BUILD_DIR, path)
+    return send_from_directory(REACT_BUILD_DIR, "index.html")
 
 if __name__ == '__main__':
     app.run()
