@@ -28,11 +28,14 @@ from db import DbUtil
 db = DbUtil({
     'host': os.getenv('DB_HOST'),
     'user': os.getenv('DB_USER'),
-    # 'password': os.getenv('DB_PASSWORD'),
+    'password': os.getenv('DB_PASSWORD'),
     'db': os.getenv('DB_NAME')
 })
 
-app = Flask(__name__, static_folder='/home/pi/Documents/heimdall/heimdall-fe/build', static_url_path="/heimdall/static") 
+# Get absolute path to the build folder relative to this file
+build_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "heimdall-fe", "build")
+
+app = Flask(__name__, static_folder=build_path, static_url_path="/static")   # optional, default is '/static' 
 
 # Secret Keys
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
