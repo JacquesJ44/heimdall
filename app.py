@@ -28,11 +28,18 @@ from db import DbUtil
 db = DbUtil({
     'host': os.getenv('DB_HOST'),
     'user': os.getenv('DB_USER'),
-    # 'password': os.getenv('DB_PASSWORD'),
+    'password': os.getenv('DB_PASSWORD'),
     'db': os.getenv('DB_NAME')
 })
 
-app = Flask(__name__, static_folder='/home/pi/Documents/heimdall/heimdall-fe/build', static_url_path="/heimdall/static") 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+REACT_BUILD_DIR = os.path.join(BASE_DIR, "heimdall-fe", "build")
+
+app = Flask(
+    __name__,
+    static_folder=REACT_BUILD_DIR,
+    static_url_path=""
+)
 
 # Secret Keys
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -962,4 +969,4 @@ def serve(path):
 
 if __name__ == '__main__':
     CORS(app, supports_credentials=True, resource={r"/*": {"origins": "*"}})
-    app.run(debug=True)
+    app.run()
