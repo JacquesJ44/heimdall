@@ -41,6 +41,9 @@ app = Flask(
     static_url_path=""
 )
 
+# Apply CORS immediately after app creation
+CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "*"}}, allow_headers=["Content-Type", "Authorization"])
+
 # Secret Keys
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
@@ -811,7 +814,7 @@ def forgot_password():
     if user:
         token = serializer.dumps(email, salt='password-reset')
         # reset_url = url_for('reset_password', token=token, _external=True)
-        reset_url = f"http://localhost:3000/reset-password/{token}"
+        reset_url = f"http://heimdall.aesir.co.za/reset-password/{token}"
 
         # Launch email sending in a background thread
         Thread(target=send_reset_email, args=(app, email, reset_url)).start()
@@ -951,22 +954,22 @@ def bulk_email_history():
    
     return jsonify(rows)
 
-# This route will serve the React app - this helps for routing in the Production environment
+# Serve React frontend
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve(path):
-    # Exclude API routes from being caught here
-    if path.startswith("api") or path.startswith("static") or path.endswith(('.js', '.css', '.json', '.ico', '.png')):
-        return send_from_directory(app.static_folder, path)
+    # If the path starts with 'api', let Flask handle it
+    if path.startswith("api/"):
+        return "Not Found", 404  # This forces Flask to look for actual API routes
+    
+    # Serve actual static files if they exist
+    full_path = os.path.join(REACT_BUILD_DIR, path)
+    if path and os.path.exists(full_path):
+        return send_from_directory(REACT_BUILD_DIR, path)
 
-    # Serve actual files if they exist
-    full_path = os.path.join(app.static_folder, path)
-    if os.path.exists(full_path):
-        return send_from_directory(app.static_folder, path)
+    # Fallback to React index.html
+    return send_from_directory(REACT_BUILD_DIR, "index.html")
 
-    # Serve React index.html for everything else
-    return send_from_directory(app.static_folder, "index.html")
 
 if __name__ == '__main__':
-    CORS(app, supports_credentials=True, resource={r"/*": {"origins": "*"}})
-    app.run()
+    app.run(host="0.0.0.0", port=5000)
