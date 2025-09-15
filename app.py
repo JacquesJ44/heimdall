@@ -959,7 +959,7 @@ def bulk_email_history():
 @app.route("/<path:path>")
 def serve(path):
     # If the path starts with 'api', let Flask handle it
-    if path.startswith("api/"):
+    if path.startswith("api"):
         return "Not Found", 404  # This forces Flask to look for actual API routes
     
     # Serve actual static files if they exist
