@@ -12,7 +12,7 @@ const Sites = () => {
     const [siteToDelete, setSiteToDelete] = useState(null);
 
     useEffect(() => {
-        axios.get('/api/sites')
+        axios.get('/heimdall/api/sites')
           .then(response => {
             setSites(response.data);
             // console.log(response.data);
@@ -27,7 +27,7 @@ const Sites = () => {
 
         try {
             // Make the DELETE request to Flask, including site ID
-            await axios.delete('/api/sites/deletesite', {
+            await axios.delete('/heimdall/api/sites/deletesite', {
             data: { id: siteId }, // sending ?id=123
       });
           // Show success message

@@ -31,7 +31,7 @@ function App() {
   const [message, setMessage] = useState('');
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename='/heimdall'>
       <div className="min-h-screen flex flex-col bg-base-200">
         <Navbar token={token} setToken={setToken} message={message} setMessage={setMessage}/>
 

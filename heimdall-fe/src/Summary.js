@@ -12,7 +12,7 @@ const Summary = () => {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const res = await axios.get("/api/summary");
+        const res = await axios.get("/heimdall/api/summary");
         setSummaryData(res.data);
       } catch (err) {
         setError(err.response?.data?.msg || "Failed to load summary data");

@@ -7,7 +7,7 @@ const UserManagement = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("/api/register/users").then((res) => setUsers(res.data));
+    axios.get("/heimdall/api/register/users").then((res) => setUsers(res.data));
   }, []);
 
   return (
