@@ -73,6 +73,17 @@ const tableConfigs = {
     ],
     includeTotal: false,
   },
+  summary: {
+    title: "Summary Report",
+    headers: [
+      { key: "site_name", label: "Site" },
+      { key: "total_revenue", label: "Revenue", format: formatCurrency },
+      { key: "running_cost", label: "Running Cost", format: formatCurrency },
+      { key: "net_profit", label: "Net Profit", format: formatCurrency },
+    ],
+    includeTotal: true,      // optional: totals row
+    // totalField: "total_revenue", // if you want to sum a field automatically
+  },
 };
 
 const TableExportButtons = ({ data = [], filename = "export", tableType, siteName }) => {

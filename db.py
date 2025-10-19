@@ -592,7 +592,7 @@ class DbUtil:
         finally:
             con.close()
 
-    def view_logs(self):
+    def get_logs(self):
         con = self.get_connection()
 
         try:
