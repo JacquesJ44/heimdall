@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from './AxiosInstance'
+import { jwtDecode } from "jwt-decode";
 
 
 import Card from "./Card";
@@ -21,6 +22,22 @@ const DashboardSite = () => {
     const [poData, setPoData] = useState(null);
     const [prorataData, setProrataData] = useState(null);
     const [fluentLiving, setFluentLiving] = useState(null);
+
+    const [role, setRole] = useState(null);
+
+     // ✅ Decode role from token
+    useEffect(() => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          setRole(decoded.role);
+          console.log("Decoded role:", decoded.role);
+        } catch (err) {
+          console.error("Invalid token:", err);
+        }
+      }
+    }, []);
 
     useEffect(() => {
       axios.get(`/heimdall/api/dashboard/site/${id}`)
@@ -88,14 +105,17 @@ const DashboardSite = () => {
 
               <div className="flex justify-between items-center mb-4">
                 <h3><strong>Site: </strong>{id}</h3>
-                <ActionDropdown onActionSelect={handleActionSelect} />
+                {/* Only show ActionDropdown for admin/superadmin */}
+                {(role === 'admin' || role === 'superadmin') && (
+                  <ActionDropdown onActionSelect={handleActionSelect} />
+                )}
               </div>
 
                 <div className="grid grid-cols-4 gap-4 my-4">
                     <Card title="Total Units" value={services.total} />
                     <Card title="Active Units" value={services.active} />
                     <Card title="Sellthrough percentage" value={`${((services.active / services.total) * 100).toFixed(2)}%`} />
-                    <Card title="Active Revenue" value={`R ${services.total_selling}`} />
+                    <Card title="Active Revenue" value={`R ${role === "client" ? services.total_cost : services.total_selling}`} />
                 </div>
 
                 {activeView === "services" && services.units && ( 

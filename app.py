@@ -294,6 +294,15 @@ def edit_site(site_id):
 @app.route("/heimdall/api/products", methods=["GET"])
 @jwt_required()
 def products():
+
+    # Extract JWT claims
+    claims = get_jwt()
+    role = claims.get("role")
+
+    # Only allow admin or superadmin
+    if role not in ["admin", "superadmin"]:
+        return jsonify({"msg": "Unauthorized"}), 403
+    
     x = db.get_all_products()
     # print(x)
     return jsonify(x)
@@ -302,6 +311,15 @@ def products():
 @app.route("/heimdall/api/products/addproduct", methods=["POST"])
 @jwt_required()
 def add_product():
+
+    # Extract JWT claims
+    claims = get_jwt()
+    role = claims.get("role")
+    print("ROLE:", role)
+
+    # Only allow admin or superadmin
+    if role not in ["admin", "superadmin"]:
+        return jsonify({"msg": "Unauthorized"}), 403
     data = request.get_json()
     
     # Check if product already exists
@@ -350,6 +368,15 @@ def delete_product():
 @app.route("/heimdall/api/products/editproduct/<int:product_id>", methods=["GET", "PUT"])
 @jwt_required()
 def edit_product(product_id):
+
+    # Extract JWT claims
+    claims = get_jwt()
+    role = claims.get("role")
+
+    # Only allow admin or superadmin
+    if role not in ["admin", "superadmin"]:
+        return jsonify({"msg": "Unauthorized"}), 403
+    
     if request.method == "GET":
         data = db.get_product_by_id(product_id)
         # print(data)
@@ -382,6 +409,14 @@ def edit_product(product_id):
 @app.route("/heimdall/api/services", methods=["GET"])
 @jwt_required()
 def services():
+    # Extract JWT claims
+    claims = get_jwt()
+    role = claims.get("role")
+
+    # Only allow admin or superadmin
+    if role not in ["admin", "superadmin"]:
+        return jsonify({"msg": "Unauthorized"}), 403
+    
     x = db.get_all_services()
     # print(x)
     return jsonify(x)
@@ -628,11 +663,13 @@ def dashboard_site(site):
     active_units = [u for u in x if u['status'] == 'Active']
     total_active = len(active_units)
     total_selling = sum(u['selling_price'] for u in active_units if u['selling_price'] is not None)
+    total_cost = sum(u['cost_price'] for u in active_units if u['cost_price'] is not None)
 
     return jsonify({
         "total": total,
         "active": total_active,
         "total_selling": total_selling,
+        "total_cost": total_cost,
         "units": x
     })
 
@@ -781,6 +818,16 @@ def summary():
 
     return jsonify(rows), 200
 
+@app.route("/api/parent-sites", methods=["GET"])
+@jwt_required()
+def parent_sites():
+    # Example structure from DB
+    data = {
+        "4 on O": ["343 on B", "146 on M"],
+        "6 on N": ["100 on M"],
+    }
+    return jsonify(data)
+
 # Route for the navbar
 @app.route("/heimdall/api/navbar")
 @jwt_required()
@@ -856,11 +903,21 @@ def logout():
     return response
 
 @app.route('/heimdall/api/logs', methods=['GET'])
-# @jwt_required()
-def view_logs():
+@jwt_required()
+def get_logs():
+
+    # Extract user info from JWT
+    claims = get_jwt()
+    role = claims.get("role")
+
+    # Only allow superadmins to view logs
+    if role != "superadmin":
+        return jsonify({"error": "Forbidden"}), 403
+
+     # Fetch logs from the database
     try:
         # print("VIEW_LOGS ROUTE HIT ✅")
-        rows = db.view_logs()
+        rows = db.get_logs()
         # print("ROWS:", rows)
         return jsonify(rows)
     except Exception as e:

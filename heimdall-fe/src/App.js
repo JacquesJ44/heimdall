@@ -23,6 +23,7 @@ import Services from './Services';
 import AddService from './AddService';
 import EditService from './EditService';
 import Summary from './Summary';
+import LogsPage from './Logs';  
 
 function App() {
 
@@ -104,6 +105,10 @@ function App() {
             <Route path="/services/editservice/:id" 
                     element={<PrivateRoute>
                               <EditService />
+                            </PrivateRoute>}/> 
+            <Route path="/logs" 
+                    element={<PrivateRoute>
+                              <LogsPage />
                             </PrivateRoute>}/> 
           </Routes>
         </main>
