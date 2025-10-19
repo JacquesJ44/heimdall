@@ -32,7 +32,7 @@ const DashboardSite = () => {
         try {
           const decoded = jwtDecode(token);
           setRole(decoded.role);
-          console.log("Decoded role:", decoded.role);
+          // console.log("Decoded role:", decoded.role);
         } catch (err) {
           console.error("Invalid token:", err);
         }

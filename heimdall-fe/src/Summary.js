@@ -135,7 +135,15 @@ const Summary = () => {
     <div className="mt-4 overflow-x-auto">
       {/* Export Buttons */}
       <TableExportButtons
-        data={flattenedData}
+              data={[
+          ...flattenedData,
+          {
+            site_name: "TOTAL",
+            total_revenue: totalRevenue,
+            running_cost: totalRunning,
+            net_profit: totalNet,
+          },
+        ]}
         tableType="summary"
         filename={`Summary_${new Date().toISOString().slice(0, 10)}`}
       />
