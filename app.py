@@ -818,7 +818,7 @@ def summary():
 
     return jsonify(rows), 200
 
-@app.route("/api/parent-sites", methods=["GET"])
+@app.route("/heimdall/api/parent-sites", methods=["GET"])
 @jwt_required()
 def parent_sites():
     # Example structure from DB
