@@ -115,7 +115,13 @@ const DashboardSite = () => {
                     <Card title="Total Units" value={services.total} />
                     <Card title="Active Units" value={services.active} />
                     <Card title="Sellthrough percentage" value={`${((services.active / services.total) * 100).toFixed(2)}%`} />
-                    <Card title="Active Revenue" value={`R ${role === "client" ? services.total_cost : services.total_selling}`} />
+                    <Card title="Active Revenue *" value={`R ${role === "client" ? services.total_cost : services.total_selling}`} />
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div style={{ fontSize: '0.75em', color: '#888'}}>
+                      *Suspended services not included
+                    </div>
                 </div>
 
                 {activeView === "services" && services.units && ( 

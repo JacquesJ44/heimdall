@@ -39,11 +39,7 @@ const Dashboard = () => {
                           hover:text-green-600 transition-colors duration-200"
               >
                 {site} <ArrowRight className="w-4 h-4" />
-            </Link>
-
-              {/* <strong>
-                <Link to={`/dashboard/site/${encodeURIComponent(site)}`}>{site}</Link>
-              </strong> */}
+              </Link>
               <PieChart width={400} height={400}>
                 <Pie
                   dataKey="value"
