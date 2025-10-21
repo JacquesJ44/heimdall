@@ -1,12 +1,29 @@
 import React, { useEffect, useState } from "react";
 import axios from "./AxiosInstance";
 import TableExportButtons from "./TableExportButtons";
+import { jwtDecode } from "jwt-decode";
 
 const Summary = () => {
   const [summaryData, setSummaryData] = useState([]);
   const [parentSites, setParentSites] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [role, setRole] = useState(null);
+
+  // ✅ Decode role from token
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        setRole(decoded.role);
+        // console.log("Decoded role:", decoded.role);
+      } catch (err) {
+        console.error("Invalid token:", err);
+      }
+    }
+  }, []);
 
   // Fetch summary data and parent sites
   useEffect(() => {
@@ -103,19 +120,42 @@ const Summary = () => {
 
   const aggregatedData = aggregateWithChildren(summaryData, parentSites);
 
-  // Flattened version for export
-  const flattenedData = aggregatedData.flatMap((p) =>
-    p.children.length > 0
-      ? [
-          { ...p, site_name: `${p.site_name} (TOTAL)` },
-          { ...p, site_name: `— ${p.site_name}`, ...p, total_revenue: p.self_revenue, running_cost: p.self_running, net_profit: p.self_net },
-          ...p.children.map((child) => ({
-            ...child,
-            site_name: `— ${child.site_name}`,
-          })),
-        ]
-      : p
-  );
+  // ✅ Flattened version for export (matches visual layout)
+  const flattenedData = aggregatedData.flatMap((parent) => {
+    // If the site has children, include TOTAL, SELF, and CHILDREN
+    if (parent.children.length > 0) {
+      return [
+        {
+          site_name: `${parent.site_name} (TOTAL)`,
+          total_revenue: parent.total_revenue,
+          running_cost: parent.running_cost,
+          net_profit: parent.net_profit,
+        },
+        {
+          site_name: `— ${parent.site_name}`,
+          total_revenue: parent.self_revenue,
+          running_cost: parent.self_running,
+          net_profit: parent.self_net,
+        },
+        ...parent.children.map((child) => ({
+          site_name: `— ${child.site_name}`,
+          total_revenue: child.total_revenue,
+          running_cost: child.running_cost,
+          net_profit: child.net_profit,
+        })),
+      ];
+    }
+
+    // If independent (no children), include only itself
+    return [
+      {
+        site_name: parent.site_name,
+        total_revenue: parent.total_revenue,
+        running_cost: parent.running_cost,
+        net_profit: parent.net_profit,
+      },
+    ];
+  });
 
   // Totals
   const totalRevenue = aggregatedData.reduce(
@@ -135,7 +175,7 @@ const Summary = () => {
     <div className="mt-4 overflow-x-auto">
       {/* Export Buttons */}
       <TableExportButtons
-        data={[
+              data={[
           ...flattenedData,
           {
             site_name: "TOTAL",
