@@ -159,7 +159,7 @@ def export_pdf(data, filepath, title):
 # -----------------------------
 # Main cron logic
 # -----------------------------
-BASE_DIR = Path("reports")
+BASE_DIR = Path(__file__).parent / "reports"
 BASE_DIR.mkdir(parents=True, exist_ok=True)
 
 today = datetime.now().strftime("%Y-%m-%d")
