@@ -12,7 +12,7 @@ const Products = () => {
     const [productToDelete, setProductToDelete] = useState(null);
 
     useEffect(() => {
-        axios.get('/api/products')
+        axios.get('/heimdall/api/products')
           .then(response => {
             setProducts(response.data);
             // console.log(response.data);
@@ -27,7 +27,7 @@ const Products = () => {
 
         try {
             // Make the DELETE request to Flask, including site ID
-            await axios.delete('/api/products/deleteproduct', {
+            await axios.delete('/heimdall/api/products/deleteproduct', {
             data: { id: productId }, // sending ?id=123
       });
           // Show success message

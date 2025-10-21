@@ -29,7 +29,7 @@ const Summary = () => {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const res = await axios.get("/api/summary");
+        const res = await axios.get("/heimdall/api/summary");
         setSummaryData(res.data);
       } catch (err) {
         setError(err.response?.data?.msg || "Failed to load summary data");
@@ -38,7 +38,7 @@ const Summary = () => {
 
     const fetchParentSites = async () => {
       try {
-        const res = await axios.get("/api/parent-sites");
+        const res = await axios.get("/heimdall/api/parent-sites");
         setParentSites(res.data);
       } catch (err) {
         console.error("Failed to load parent sites:", err);

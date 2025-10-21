@@ -40,7 +40,7 @@ const DashboardSite = () => {
     }, []);
 
     useEffect(() => {
-      axios.get(`/api/dashboard/site/${id}`)
+      axios.get(`/heimdall/api/dashboard/site/${id}`)
       .then(response => {
         setServices(response.data);
         // console.log(response.data);
@@ -58,7 +58,7 @@ const DashboardSite = () => {
 
     if (action === "po_current_month") {
       setActiveView("po_current_month");
-      axios.get(`/api/dashboard/site/${id}/po`) // you’ll create this Flask route
+      axios.get(`/heimdall/api/dashboard/site/${id}/po`) // you’ll create this Flask route
         .then(response => {
           setPoData(response.data);
           // console.log(response.data);
@@ -70,7 +70,7 @@ const DashboardSite = () => {
 
     if (action === "prorata") {
       setActiveView("prorata");
-      axios.get(`/api/dashboard/site/${id}/prorata`) // you’ll create this Flask route
+      axios.get(`/heimdall/api/dashboard/site/${id}/prorata`) // you’ll create this Flask route
         .then(response => {
           setProrataData(response.data);
           // console.log(response.data);
@@ -82,7 +82,7 @@ const DashboardSite = () => {
       
       if (action === "fluent_living") {
         setActiveView("fluent_living");
-        axios.get(`/api/dashboard/site/${id}/fluent_living`) // you’ll create this Flask route
+        axios.get(`/heimdall/api/dashboard/site/${id}/fluent_living`) // you’ll create this Flask route
         .then(response => {
           setFluentLiving(response.data);
           // console.log(response.data);
