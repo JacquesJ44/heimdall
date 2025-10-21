@@ -23,6 +23,7 @@ import Services from './Services';
 import AddService from './AddService';
 import EditService from './EditService';
 import Summary from './Summary';
+import LogsPage from './Logs';  
 
 function App() {
 
@@ -30,7 +31,7 @@ function App() {
   const [message, setMessage] = useState('');
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename='/heimdall'>
       <div className="min-h-screen flex flex-col bg-base-200">
         <Navbar token={token} setToken={setToken} message={message} setMessage={setMessage}/>
 
@@ -104,6 +105,10 @@ function App() {
             <Route path="/services/editservice/:id" 
                     element={<PrivateRoute>
                               <EditService />
+                            </PrivateRoute>}/> 
+            <Route path="/logs" 
+                    element={<PrivateRoute>
+                              <LogsPage />
                             </PrivateRoute>}/> 
           </Routes>
         </main>

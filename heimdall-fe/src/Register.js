@@ -15,7 +15,7 @@ const Register = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const response = await axios.post('/api/register', { name, surname,email, password, confirmPassword });
+      const response = await axios.post('/heimdall/api/register', { name, surname,email, password, confirmPassword });
     
       // Show success message
       setShowSuccess(true);
