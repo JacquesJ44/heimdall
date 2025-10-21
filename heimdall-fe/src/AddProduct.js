@@ -16,7 +16,7 @@ const AddProduct = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-          const response = await axios.post('/heimdall/api/products/addproduct', { name, cost_price, selling_price });
+          const response = await axios.post('/api/products/addproduct', { name, cost_price, selling_price });
         //   console.log(response);
           setShowSuccess(true);
           // Wait 1.5 seconds before reloading

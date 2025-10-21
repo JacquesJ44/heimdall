@@ -15,7 +15,7 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
         setMessage("No token found")
         return;
       }
-      axios.get('/heimdall/api/navbar', {
+      axios.get('/api/navbar', {
         headers: {
           Authorization: `Bearer ${storedToken}`
         }
@@ -42,7 +42,7 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
         case "admin":
           return ["Dashboard", "Services", "Products", "Sites"];
         case "superadmin":
-          return ["Dashboard", "Services", "Products", "Sites", "Register New User", "Summary", "Logs"];
+          return ["Dashboard", "Services", "Products", "Sites", "Register New User", "Summary"];
         default:
           return [];
       }
@@ -51,7 +51,7 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
     const handleLogout = async () => {
         try {
           // Optionally notify the backend
-          await axios.post('/heimdall/api/logout', {}, { withCredentials: true });
+          await axios.post('/api/logout', {}, { withCredentials: true });
     
           // Clear local token
           localStorage.removeItem('token');
@@ -68,7 +68,7 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
   return (
     <div className="navbar sticky top-0 shadow-2xl bg-base-200 roundedborders">
       <div className="flex-1">
-        <img src="/heimdall/aesirblue.png" className="App-logo" alt="logo" />
+        <img src="/aesirblue.png" className="App-logo" alt="logo" />
       </div>
 
       <div className="flex-none">
@@ -92,9 +92,6 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
               )}
               {getLinksByRole(role).includes("Summary") && (
                 <li className="mx-2"><Link to="/summary">Summary</Link></li>
-              )}
-              {getLinksByRole(role).includes("Logs") && (
-                <li className="mx-2"><Link to="/logs">Logs</Link></li>
               )}
               <li className="mx-2">
                 <button onClick={handleLogout} className="btn btn-outline btn-sm">Logout</button>

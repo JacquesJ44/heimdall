@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from './AxiosInstance'
-import { jwtDecode } from "jwt-decode";
 
 
 import Card from "./Card";
@@ -23,24 +22,8 @@ const DashboardSite = () => {
     const [prorataData, setProrataData] = useState(null);
     const [fluentLiving, setFluentLiving] = useState(null);
 
-    const [role, setRole] = useState(null);
-
-     // ✅ Decode role from token
     useEffect(() => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        try {
-          const decoded = jwtDecode(token);
-          setRole(decoded.role);
-          // console.log("Decoded role:", decoded.role);
-        } catch (err) {
-          console.error("Invalid token:", err);
-        }
-      }
-    }, []);
-
-    useEffect(() => {
-      axios.get(`/heimdall/api/dashboard/site/${id}`)
+      axios.get(`/api/dashboard/site/${id}`)
       .then(response => {
         setServices(response.data);
         // console.log(response.data);
@@ -58,7 +41,7 @@ const DashboardSite = () => {
 
     if (action === "po_current_month") {
       setActiveView("po_current_month");
-      axios.get(`/heimdall/api/dashboard/site/${id}/po`) // you’ll create this Flask route
+      axios.get(`/api/dashboard/site/${id}/po`) // you’ll create this Flask route
         .then(response => {
           setPoData(response.data);
           // console.log(response.data);
@@ -70,7 +53,7 @@ const DashboardSite = () => {
 
     if (action === "prorata") {
       setActiveView("prorata");
-      axios.get(`/heimdall/api/dashboard/site/${id}/prorata`) // you’ll create this Flask route
+      axios.get(`/api/dashboard/site/${id}/prorata`) // you’ll create this Flask route
         .then(response => {
           setProrataData(response.data);
           // console.log(response.data);
@@ -82,7 +65,7 @@ const DashboardSite = () => {
       
       if (action === "fluent_living") {
         setActiveView("fluent_living");
-        axios.get(`/heimdall/api/dashboard/site/${id}/fluent_living`) // you’ll create this Flask route
+        axios.get(`/api/dashboard/site/${id}/fluent_living`) // you’ll create this Flask route
         .then(response => {
           setFluentLiving(response.data);
           // console.log(response.data);
@@ -105,23 +88,14 @@ const DashboardSite = () => {
 
               <div className="flex justify-between items-center mb-4">
                 <h3><strong>Site: </strong>{id}</h3>
-                {/* Only show ActionDropdown for admin/superadmin */}
-                {(role === 'admin' || role === 'superadmin') && (
-                  <ActionDropdown onActionSelect={handleActionSelect} />
-                )}
+                <ActionDropdown onActionSelect={handleActionSelect} />
               </div>
 
                 <div className="grid grid-cols-4 gap-4 my-4">
                     <Card title="Total Units" value={services.total} />
                     <Card title="Active Units" value={services.active} />
                     <Card title="Sellthrough percentage" value={`${((services.active / services.total) * 100).toFixed(2)}%`} />
-                    <Card title="Active Revenue *" value={`R ${role === "client" ? services.total_cost : services.total_selling}`} />
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div style={{ fontSize: '0.75em', color: '#888'}}>
-                      *Suspended services not included
-                    </div>
+                    <Card title="Active Revenue" value={`R ${services.total_selling}`} />
                 </div>
 
                 {activeView === "services" && services.units && ( 

@@ -14,7 +14,8 @@ export default function BulkEmail() {
   useEffect(() => {
     const fetchSites = async () => {
       try {
-        const response = await axios.get("/heimdall/api/sites");
+        const response = await axios.get("/api/sites");
+        // const data = await response.json();
         // console.log('Sites:', response.data);
         setSites(response.data || []); // assuming API returns an array like [{ id: 1, name: "Site A" }, ...]
       } catch (err) {
@@ -24,10 +25,11 @@ export default function BulkEmail() {
     fetchSites();
   }, []);
 
-    // Fetch last 20 bulk emails
+  // Fetch last 20 bulk emails
+  // useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await axios.get("/heimdall/api/bulk_email_history?limit=20");
+        const response = await axios.get("/api/bulk_email_history?limit=20");
         setHistory(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         console.error("Error fetching email history:", err);
@@ -44,7 +46,7 @@ const handleSubmit = async (e) => {
   setLoading(true);
 
   try {
-    const response = await axios.post("/heimdall/api/send_bulk_email", {
+    const response = await axios.post("/api/send_bulk_email", {
       site_id: site,
       subject,
       body: message,
@@ -90,7 +92,8 @@ return (
             <select
               value={site}
               onChange={(e) => setSite(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring focus:ring-yellow-500">
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring focus:ring-yellow-500"
+            >
               <option value="">Select a site</option>
               {sites.map((s) => (
                 <option key={s.id} value={s.id}>

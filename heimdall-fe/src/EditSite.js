@@ -16,7 +16,7 @@ const EditSite = () => {
     let navigate = useNavigate()
 
     useEffect(() => {
-        axios.get(`/heimdall/api/sites/editsite/${id}`)
+        axios.get(`/api/sites/editsite/${id}`)
           .then(response => {
             const data = response.data;
             // console.log(data);
@@ -33,7 +33,7 @@ const EditSite = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-          const response = await axios.put(`/heimdall/api/sites/editsite/${id}`, { name, street, suburb, running_cost });
+          const response = await axios.put(`/api/sites/editsite/${id}`, { name, street, suburb, running_cost });
         //   console.log('RESPONSE:', response);
           setShowSuccess(true);
           // Wait 1.5 seconds before reloading

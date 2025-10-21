@@ -525,6 +525,7 @@ class DbUtil:
                     WHERE s.fluent_living = 1 AND si.name = %s
                     ORDER BY 
                         REGEXP_SUBSTR(s.unit_number, '^[A-Za-z]+'),
+                        CAST(REGEXP_SUBSTR(s.unit_number, '[0-9]+') AS UNSIGNED)                
                     """, (site,))
                 rows = c.fetchall()
                 # print("Query result:", rows)
@@ -594,7 +595,7 @@ class DbUtil:
         finally:
             con.close()
 
-    def get_logs(self):
+    def view_logs(self):
         con = self.get_connection()
 
         try:

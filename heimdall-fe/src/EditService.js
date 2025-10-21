@@ -41,7 +41,7 @@ const EditService = () => {
     let navigate = useNavigate()
 
     useEffect(() => {
-        axios.get(`/heimdall/api/services/editservice/${id}`)
+        axios.get(`/api/services/editservice/${id}`)
           .then(response => {
             const data = response.data;
             // console.log(data);
@@ -74,7 +74,7 @@ const EditService = () => {
           });
 
           // Get all sites
-        axios.get('/heimdall/api/sites')
+        axios.get('/api/sites')
         .then((res) => {
             setSites(res.data);
             // console.log(res.data);
@@ -82,7 +82,7 @@ const EditService = () => {
         .catch(error => console.log(error));
 
         // Get all products
-        axios.get('/heimdall/api/products')
+        axios.get('/api/products')
         .then((res) => {
             setProducts(res.data);
             // console.log(res.data);
@@ -93,7 +93,7 @@ const EditService = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-          const response = await axios.put(`/heimdall/api/services/editservice/${id}`, { site_id, unit_number, onu_make, onu_model, onu_serial, gpon_serial, onu_number, status, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5ghz, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living: fluent_living ? fluent_living : 0, activation_date, comments, product_id });
+          const response = await axios.put(`/api/services/editservice/${id}`, { site_id, unit_number, onu_make, onu_model, onu_serial, gpon_serial, onu_number, status, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5ghz, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living: fluent_living ? fluent_living : 0, activation_date, comments, product_id });
         //   console.log(response);
           // Check for successful update or no changes made
         if (response.status === 404) {

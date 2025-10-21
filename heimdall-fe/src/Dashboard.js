@@ -2,8 +2,6 @@ import { useState,useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from './AxiosInstance'
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
-import { ArrowRight } from "lucide-react";
-
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CF1', '#FF6699', '#B22222'];
 
@@ -15,7 +13,7 @@ const Dashboard = () => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    axios.get('/heimdall/api/dashboard')
+    axios.get('/api/dashboard')
     .then(response => {
       setData(response.data);
       // console.log(response.data);
@@ -33,13 +31,9 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-20" >
           {Object.entries(data).map(([site, data], idx) => (
             <div key={site} style={{ marginBottom: '40px' }}>
-              <Link
-                to={`/dashboard/site/${encodeURIComponent(site)}`}
-                className="flex items-center gap-1 text-gray-800 font-semibold text-lg 
-                          hover:text-green-600 transition-colors duration-200"
-              >
-                {site} <ArrowRight className="w-4 h-4" />
-              </Link>
+              <strong>
+                <Link to={`/dashboard/site/${encodeURIComponent(site)}`}>{site}</Link>
+              </strong>
               <PieChart width={400} height={400}>
                 <Pie
                   dataKey="value"

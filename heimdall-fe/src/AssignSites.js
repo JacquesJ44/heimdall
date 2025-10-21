@@ -12,9 +12,9 @@ const AssignSites = () => {
 
   useEffect(() => {
     // Get all sites
-    axios.get("/heimdall/api/sites").then((res) => setSites(res.data));
+    axios.get("/api/sites").then((res) => setSites(res.data));
     // Get sites this user already has access to
-    axios.get(`/heimdall/api/register/users/${id}/sites`).then((res) =>
+    axios.get(`/api/register/users/${id}/sites`).then((res) =>
       setAssigned(res.data.map((s) => s.id))
     );
   }, [id]);
@@ -30,7 +30,7 @@ const AssignSites = () => {
   const handleSave = () => {
 
     try {
-        axios.post(`/heimdall/api/register/users/${id}/sites`, { site_ids: assigned })
+        axios.post(`/api/register/users/${id}/sites`, { site_ids: assigned })
 
         // Show success message
           setShowSuccess(true);
