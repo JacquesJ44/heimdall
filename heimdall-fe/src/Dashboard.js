@@ -35,7 +35,7 @@ const Dashboard = () => {
             <div key={site} style={{ marginBottom: '40px' }}>
               <Link
                 to={`/dashboard/site/${encodeURIComponent(site)}`}
-                className="flex items-center gap-1 text-gray-800 font-semibold text-lg 
+                className="flex items-center gap-1 text-gray-800 dark:text-gray-200 font-semibold text-lg 
                           hover:text-green-600 transition-colors duration-200"
               >
                 {site} <ArrowRight className="w-4 h-4" />
