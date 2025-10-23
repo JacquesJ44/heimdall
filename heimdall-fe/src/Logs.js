@@ -18,7 +18,7 @@ const LogsPage = () => {
       <h2 className="text-xl font-semibold mb-4">System Logs</h2>
       <ul className="space-y-2">
         {logs.map((log) => (
-          <li key={log.id} className="p-2 bg-gray-100 rounded shadow-sm">
+          <li key={log.id} className="p-2 bg-gray-100 dark:bg-gray-800 rounded shadow-sm">
             <strong>{log.details}</strong> — {log.action} by {log.user_id} <span className="text-gray-500">({log.timestamp})</span>
           </li>
         ))}
