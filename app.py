@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, unset_jwt_cookies, jwt_required, JWTManager
 from flask_mail import Mail, Message
+from email_validator import validate_email, EmailNotValidError
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, date
@@ -954,6 +955,20 @@ def send_bulk_email():
     tenants = [e.strip() for e in emails_string.split(",")]
     # pprint(tenants)
 
+    # Validate emails
+    valid_emails = []
+    invalid_emails = []
+    for email in tenants:
+        try:
+            validate_email(email, check_deliverability=True)
+            valid_emails.append(email)
+        except EmailNotValidError:
+            invalid_emails.append(email)
+
+    if not valid_emails:
+        return jsonify({"status": "error", "msg": "No valid email addresses found"}), 400
+
+
     # Get site name
     site = db.get_site_by_id(site_id)
     if site is None:
@@ -980,7 +995,7 @@ def send_bulk_email():
         msg = Message(
             subject=f"{subject} - {site['name']}",
             recipients=[os.getenv('MAIL_DEFAULT_SENDER')],
-            bcc=tenants,
+            bcc=valid_emails,
             html=html_body
         )
         try:
@@ -1001,7 +1016,12 @@ def send_bulk_email():
             "sent_to": sent_count
         }), 500
 
-    return jsonify({"status": "success", "sent_to": sent_count}), 200
+    return jsonify({
+                "status": "success",
+                "sent_to": sent_count,
+                "invalid_emails": invalid_emails
+            }), 200
+
 
 @app.route("/api/bulk_email_history", methods=["GET"])
 @jwt_required()
