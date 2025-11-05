@@ -29,11 +29,21 @@ from db import DbUtil
 db = DbUtil({
     'host': os.getenv('DB_HOST'),
     'user': os.getenv('DB_USER'),
-    # 'password': os.getenv('DB_PASSWORD'),
+    'password': os.getenv('DB_PASSWORD'),
     'db': os.getenv('DB_NAME')
 })
 
-app = Flask(__name__, static_folder='/home/pi/Documents/heimdall/heimdall-fe/build', static_url_path="/heimdall/static") 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+REACT_BUILD_DIR = os.path.join(BASE_DIR, "heimdall-fe", "build")
+
+app = Flask(
+    __name__,
+    static_folder=REACT_BUILD_DIR,
+    static_url_path=""
+)
+
+# Apply CORS immediately after app creation
+CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "*"}}, allow_headers=["Content-Type", "Authorization"])
 
 # Secret Keys
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -344,7 +354,6 @@ def edit_site(site_id):
 @app.route("/api/products", methods=["GET"])
 @jwt_required()
 def products():
-
     # Extract JWT claims
     claims = get_jwt()
     role = claims.get("role")
@@ -365,11 +374,11 @@ def add_product():
     # Extract JWT claims
     claims = get_jwt()
     role = claims.get("role")
-    # print("ROLE:", role)
 
     # Only allow admin or superadmin
     if role not in ["admin", "superadmin"]:
         return jsonify({"msg": "Unauthorized"}), 403
+    
     data = request.get_json()
     
     # Check if product already exists
@@ -459,6 +468,7 @@ def edit_product(product_id):
 @app.route("/api/services", methods=["GET"])
 @jwt_required()
 def services():
+
     # Extract JWT claims
     claims = get_jwt()
     role = claims.get("role")
@@ -466,7 +476,6 @@ def services():
     # Only allow admin or superadmin
     if role not in ["admin", "superadmin"]:
         return jsonify({"msg": "Unauthorized"}), 403
-    
     x = db.get_all_services()
     # print(x)
     return jsonify(x)
@@ -893,6 +902,7 @@ def parent_sites():
     }
     return jsonify(data)
 
+
 # Route for the navbar
 @app.route("/api/navbar")
 @jwt_required()
@@ -916,7 +926,7 @@ def forgot_password():
     if user:
         token = serializer.dumps(email, salt='password-reset')
         # reset_url = url_for('reset_password', token=token, _external=True)
-        reset_url = f"http://localhost:3000/reset-password/{token}"
+        reset_url = f"http://heimdall.aesir.co.za/reset-password/{token}"
 
         # Launch email sending in a background thread
         Thread(target=send_reset_email, args=(app, email, reset_url)).start()
@@ -1091,22 +1101,22 @@ def bulk_email_history():
    
     return jsonify(rows)
 
-# This route will serve the React app - this helps for routing in the Production environment
+# Serve React frontend
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve(path):
-    # Exclude API routes from being caught here
-    if path.startswith("api") or path.startswith("static") or path.endswith(('.js', '.css', '.json', '.ico', '.png')):
-        return send_from_directory(app.static_folder, path)
+    # If the path starts with 'api', let Flask handle it
+    if path.startswith("api"):
+        return "Not Found", 404  # This forces Flask to look for actual API routes
+    
+    # Serve actual static files if they exist
+    full_path = os.path.join(REACT_BUILD_DIR, path)
+    if path and os.path.exists(full_path):
+        return send_from_directory(REACT_BUILD_DIR, path)
 
-    # Serve actual files if they exist
-    full_path = os.path.join(app.static_folder, path)
-    if os.path.exists(full_path):
-        return send_from_directory(app.static_folder, path)
+    # Fallback to React index.html
+    return send_from_directory(REACT_BUILD_DIR, "index.html")
 
-    # Serve React index.html for everything else
-    return send_from_directory(app.static_folder, "index.html")
 
 if __name__ == '__main__':
-    CORS(app, supports_credentials=True, resource={r"/*": {"origins": "*"}})
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
