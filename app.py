@@ -141,9 +141,17 @@ def login():
     return jsonify({"access_token": access_token}), 200
 
 @app.route("/api/register", methods=["POST"])
+@jwt_required()
 def register():
+    # Extract JWT claims
+    claims = get_jwt()
+    role = claims.get("role")
+
+    # Only allow admin or superadmin
+    if role != "superadmin":
+        return jsonify({"msg": "Unauthorized"}), 403
     data = request.get_json()
-    pprint(data)
+    # pprint(data)
 
     row = db.get_user_by_email(data['email'])
     if row is not None:
@@ -158,7 +166,16 @@ def register():
     return jsonify({"msg": "Registration successful"})
 
 @app.route("/api/register/users", methods=["GET"])
+@jwt_required()
 def register_user():
+    # Extract JWT claims
+    claims = get_jwt()
+    role = claims.get("role")
+
+    # Only allow admin or superadmin
+    if role != "superadmin":
+        return jsonify({"msg": "Unauthorized"}), 403
+
     rows = db.get_all_users()
     # print("ROUTE HIT ✅")
     
@@ -167,8 +184,14 @@ def register_user():
 @app.route("/api/register/users/<int:user_id>/sites", methods=["GET", "POST"])
 @jwt_required()
 def manage_user_sites(user_id):
+    
+    # Extract JWT claims
     claims = get_jwt()
     role = claims.get("role")
+
+    # Only allow admin or superadmin
+    if role !="superadmin":
+        return jsonify({"msg": "Unauthorized"}), 403
 
     if request.method == "GET":
         try:
@@ -194,6 +217,14 @@ def manage_user_sites(user_id):
 @app.route("/api/sites", methods=["GET"])
 @jwt_required()
 def sites():
+    # Extract JWT claims
+    claims = get_jwt()
+    role = claims.get("role")
+
+    # Only allow admin or superadmin
+    if role not in ["admin", "superadmin"]:
+        return jsonify({"msg": "Unauthorized"}), 403
+    
     x = db.get_all_sites()
     # pprint(x)
     return jsonify(x)
@@ -202,6 +233,15 @@ def sites():
 @app.route("/api/sites/addsite", methods=["POST"])
 @jwt_required()
 def add_site():
+
+    # Extract JWT claims
+    claims = get_jwt()
+    role = claims.get("role")
+
+    # Only allow admin or superadmin
+    if role not in ["admin", "superadmin"]:
+        return jsonify({"msg": "Unauthorized"}), 403
+    
     data = request.get_json() or {}
 
     # Validate required fields
@@ -262,6 +302,15 @@ def delete_site():
 @app.route("/api/sites/editsite/<int:site_id>", methods=["GET", "PUT"]) 
 @jwt_required()
 def edit_site(site_id):
+
+    # Extract JWT claims
+    claims = get_jwt()
+    role = claims.get("role")
+
+    # Only allow admin or superadmin
+    if role not in ["admin", "superadmin"]:
+        return jsonify({"msg": "Unauthorized"}), 403
+    
     if request.method == "GET":
         data = db.get_site_by_id(site_id)
         # print(data)
@@ -316,7 +365,7 @@ def add_product():
     # Extract JWT claims
     claims = get_jwt()
     role = claims.get("role")
-    print("ROLE:", role)
+    # print("ROLE:", role)
 
     # Only allow admin or superadmin
     if role not in ["admin", "superadmin"]:
@@ -428,6 +477,14 @@ def services():
 def add_service():
     data = request.get_json()
 
+    # Extract user info from JWT
+    claims = get_jwt()
+    role = claims.get("role")
+
+    # Clients cannot add services
+    if role == "client":
+        return jsonify({"error": "Forbidden"}), 403
+
     if not data:
         return jsonify({"msg": "Missing JSON in request"}), 400
 
@@ -476,8 +533,6 @@ def add_service():
     
     # LOGGING ACTIONS
     try:
-        user_id = get_jwt_identity()
-        # print('jwt id: ', user_id)
         details = describe_changes_log({},data, fields=[
             'site_id', 'unit_number', 'onu_make', 'onu_model', 'onu_serial',
             'onu_number', 'gpon_serial', 'status', 'light_level',
@@ -487,7 +542,7 @@ def add_service():
             'fluent_living', 'product_id', activation_date, 'comments'
         ])
         db.log_action(
-            user_id=user_id,
+            user_id=claims.get("email"),
             action="create",
             target_table="services",
             target_id=None,  # or get the ID if save_service returns it
@@ -502,6 +557,15 @@ def add_service():
 @app.route("/api/services/editservice/<int:service_id>", methods=["GET", "PUT"])
 @jwt_required()
 def edit_service(service_id):
+
+    # Extract user info from JWT
+    claims = get_jwt()
+    role = claims.get("role")
+
+    # Clients cannot update services
+    if role == "client":
+        return jsonify({"error": "Forbidden"}), 403
+    
     if request.method == "GET":
         data = db.get_service_by_id(service_id)
 
@@ -531,7 +595,6 @@ def edit_service(service_id):
         success = db.edit_service(service_id, **new_data)
         if success > 0: 
             try:
-                user_id = get_jwt_identity()
                 details = describe_changes_log(old_data, new_data, fields=[
                 'site_id', 'unit_number', 'onu_make', 'onu_model', 'onu_serial',
                 'onu_number', 'gpon_serial', 'status', 'light_level',
@@ -542,12 +605,13 @@ def edit_service(service_id):
                 ])
 
                 db.log_action(
-                    user_id=user_id,
+                    user_id=claims.get("email"),
                     action="update",
                     target_table="services",
                     target_id=service_id,
                     details=details
                 )
+
             except Exception as e:
                 print(f"⚠️ Logging error: {e}")
 
@@ -943,6 +1007,7 @@ def send_bulk_email():
 
     emails_string = raw_tenants[0]
     tenants = [e.strip() for e in emails_string.split(",")]
+    # print("TENANTS:")
     # pprint(tenants)
 
     # Validate emails
@@ -954,6 +1019,11 @@ def send_bulk_email():
             valid_emails.append(email)
         except EmailNotValidError:
             invalid_emails.append(email)
+
+    # print("VALID EMAILS:")
+    # pprint(valid_emails)
+    # print("INVALID EMAILS:")
+    # pprint(invalid_emails)  
 
     if not valid_emails:
         return jsonify({"status": "error", "msg": "No valid email addresses found"}), 400
@@ -990,7 +1060,7 @@ def send_bulk_email():
         )
         try:
             conn_mail.send(msg)
-            sent_count = len(tenants)
+            sent_count = len(valid_emails)
         except Exception as e:
             failed = [{"recipient": "ALL", "error": str(e)}]
 
@@ -1008,7 +1078,7 @@ def send_bulk_email():
 
     return jsonify({
                 "status": "success",
-                "sent_to": sent_count,
+                "sent_to": f'{sent_count} out of {len(tenants)}',
                 "invalid_emails": invalid_emails
             }), 200
 

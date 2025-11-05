@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from './AxiosInstance';
-import { Loader2 } from "lucide-react";
+import { Loader2, NotebookPen } from "lucide-react";
 
 export default function BulkEmail() {
   const [sites, setSites] = useState([]);
@@ -53,6 +53,7 @@ const handleSubmit = async (e) => {
     });
 
     const data = response.data;
+    // console.log("Response from API:", data);
 
     if (data.status === "error") {
       const errMsg = data.msg || "Failed to send emails";
@@ -61,7 +62,8 @@ const handleSubmit = async (e) => {
       return;
     }
 
-    alert(`Emails sent successfully to ${data.sent_to} recipients!`);
+    alert(`Emails sent successfully to ${data.sent_to} recipients!
+           Failed to send to ${data.invalid_emails || null}.`);
     fetchHistory();
     setSite("");
     setSubject("");
