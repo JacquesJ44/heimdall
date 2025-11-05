@@ -19,7 +19,7 @@ const LogsPage = () => {
       <ul className="space-y-2">
         {logs.map((log) => (
           <li key={log.id} className="p-2 bg-gray-100 dark:bg-gray-800 rounded shadow-sm">
-            <strong>{log.details}</strong> — {log.action} by {log.user_id} <span className="text-gray-500">({log.timestamp})</span>
+            <strong>{log.details}</strong> — {log.action} by {log.user_id} on table {log.target_table} {log.target_id}<span className="text-gray-500"> ({log.timestamp})</span>
           </li>
         ))}
       </ul>
