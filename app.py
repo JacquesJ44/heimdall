@@ -34,7 +34,7 @@ db = DbUtil({
 })
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-REACT_BUILD_DIR = os.path.join(BASE_DIR, "heimdall-fe", "build")
+REACT_BUILD_DIR = os.path.join(BASE_DIR, "heimdall-fe-vite", "dist")
 
 app = Flask(
     __name__,
@@ -1119,4 +1119,4 @@ def serve(path):
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000)
+    app.run()

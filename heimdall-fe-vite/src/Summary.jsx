@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "./AxiosInstance";
-import TableExportButtons from "./TableExportButtons";
+import TableExportButtons from "./TableExportButtons.jsx";
 import { jwtDecode } from "jwt-decode";
 
 const Summary = () => {
