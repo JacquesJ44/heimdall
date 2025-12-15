@@ -2,28 +2,28 @@ import { useState } from 'react';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 
 import './App.css';
-import PrivateRoute from './PrivateRoute';
-import Navbar from './Navbar'
-import Login from './Login'
-import ForgotPassword from './ForgotPassword'
-import ResetPassword from './ResetPassword'
-import Dashboard from './Dashboard';
-import DashboardSite from './DashboardSite';
-import Register from './Register'
-import UserManagement from './UserManagement'
-import AssignSites from './AssignSites';
-import Sites from './Sites';
-import AddSite from './AddSite';
-import EditSite from './EditSite';
-import BulkEmail from './BulkEmail';
-import Products from './Products';
-import AddProduct from './AddProduct';
-import EditProduct from './EditProduct';
-import Services from './Services';
-import AddService from './AddService';
-import EditService from './EditService';
-import Summary from './Summary';
-import LogsPage from './Logs';  
+import PrivateRoute from './PrivateRoute.jsx';
+import Navbar from './Navbar.jsx'
+import Login from './Login.jsx'
+import ForgotPassword from './ForgotPassword.jsx'
+import ResetPassword from './ResetPassword.jsx'
+import Dashboard from './Dashboard.jsx';
+import DashboardSite from './DashboardSite.jsx';
+import Register from './Register.jsx'
+import UserManagement from './UserManagement.jsx'
+import AssignSites from './AssignSites.jsx';
+import Sites from './Sites.jsx';
+import AddSite from './AddSite.jsx';
+import EditSite from './EditSite.jsx';
+import BulkEmail from './BulkEmail.jsx';
+import Products from './Products.jsx';
+import AddProduct from './AddProduct.jsx';
+import EditProduct from './EditProduct.jsx';
+import Services from './Services.jsx';
+import AddService from './AddService.jsx';
+import EditService from './EditService.jsx';
+import Summary from './Summary.jsx';
+import LogsPage from './Logs.jsx';  
 
 function App() {
 
@@ -35,7 +35,7 @@ function App() {
       <div className="min-h-screen flex flex-col bg-base-200">
         <Navbar token={token} setToken={setToken} message={message} setMessage={setMessage}/>
 
-        <main className="flex-grow flex items-center justify-center">
+        <main className="grow flex items-center justify-center">
           <Routes> 
             <Route path='/' element={ token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
             <Route path="/login" element={<Login setToken={setToken} />} />

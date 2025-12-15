@@ -8,3 +8,4 @@ reportlab
 pandas
 openpyxl
 email-validator
+cryptography

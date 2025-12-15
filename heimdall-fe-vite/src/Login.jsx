@@ -28,6 +28,17 @@ const Login = ({ setToken }) => {
     return (
         <div className="h-screen flex items-center justify-center">
             <div className="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-200">
+                {/* <div className="bg-red-500 p-10 text-white text-4xl !important">
+                TAILWIND FORCE TEST
+                <div className="bg-red-500 text-white p-10 text-4xl">
+  Tailwind Works!
+</div>
+
+<button className="btn btn-primary">
+  DaisyUI Works!
+</button>
+
+                </div> */}
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
                         <div className="form-control mt-2">
