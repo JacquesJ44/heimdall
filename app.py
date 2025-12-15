@@ -35,6 +35,11 @@ db = DbUtil({
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 REACT_BUILD_DIR = os.path.join(BASE_DIR, "heimdall-fe-vite", "dist")
+EMAIL_LIST_REGEX = re.compile(
+    r'^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})'
+    r'(, [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})*$'
+)
+
 
 app = Flask(
     __name__,
@@ -102,6 +107,20 @@ def refresh_expiring_jwts(response):
     except (RuntimeError, KeyError):
         # Case where there is not a valid JWT. Just return the original respone
         return response
+    
+def validate_email_list(value: str) -> bool:
+    if not value:
+        return True  # allow empty unless you want to enforce required
+
+    if not EMAIL_LIST_REGEX.fullmatch(value):
+        return False
+
+    # Extra safety: validate each email individually
+    for email in value.split(", "):
+        if not re.fullmatch(r'[^@]+@[^@]+\.[^@]+', email):
+            return False
+
+    return True
 
 #Login route 
 @app.route('/api/login', methods=['POST'])
@@ -500,67 +519,146 @@ def add_service():
     required_fields = [
         'site_id', 'unit_number', 'onu_make', 'onu_model', 'onu_serial',
         'onu_number', 'gpon_serial', 'status', 'light_level', 'pppoe_un',
-        'pppoe_pw', 'ssid_24ghz', 'password_24ghz', 'ssid_5ghz', 'password_5ghz',
-        'customer_fullname', 'contact_number', 'email', 'debit_order_status',
-        'fluent_living', 'product_id', 'activation_date', 'comments'
+        'pppoe_pw', 'ssid_24ghz', 'password_24ghz', 'ssid_5ghz',
+        'password_5ghz', 'customer_fullname', 'contact_number', 'email',
+        'debit_order_status', 'fluent_living', 'product_id',
+        'activation_date', 'comments'
     ]
 
-    # Check for missing fields
     missing = [field for field in required_fields if field not in data]
     if missing:
         return jsonify({"msg": f"Missing fields: {', '.join(missing)}"}), 400
 
-    # Check if service already exists
+    # ===============================
+    # EMAIL VALIDATION
+    # ===============================
+    email_value = data.get("email", "").strip()
+    if not validate_email_list(email_value):
+        return jsonify({
+            "msg": (
+                "Invalid email format. "
+                "Email addresses must be separated by a comma and a space. "
+                "Example: user1@example.com, user2@example.com"
+            )
+        }), 400
+    data["email"] = email_value
+
+    # ===============================
+    # STATUS / PACKAGE ENFORCEMENT
+    # ===============================
+    status = data.get("status")
+    product_id = data.get("product_id")
+
+    if status == "Inactive":
+        data["product_id"] = 17  # "No Package"
+        data["activation_date"] = None
+
+    elif status == "Active":
+        if not product_id:
+            return jsonify({
+                "error": "An active service must have a valid package selected."
+            }), 400
+
+        product = db.get_product_by_id(product_id)
+        if not product:
+            return jsonify({
+                "error": "Selected package does not exist."
+            }), 400
+
+    # ===============================
+    # DUPLICATE SERVICE CHECK
+    # ===============================
     try:
-        existing_service = db.verify_service(data['site_id'], data['unit_number'])
+        existing_service = db.verify_service(
+            data['site_id'],
+            data['unit_number']
+        )
     except Exception as e:
         print(f"DB error during verification: {e}")
-        return jsonify({"msg": "Database error while verifying service."}), 500
+        return jsonify({
+            "msg": "Database error while verifying service."
+        }), 500
 
     if existing_service:
-        return jsonify({"msg": "Service already exists in this unit!"}), 400
-    
-    activation_date_str = data.get('activation_date')
-    if activation_date_str:
-        activation_date = datetime.strptime(activation_date_str, '%Y-%m-%d').date()
-    else:
-        activation_date = None
+        return jsonify({
+            "msg": "Service already exists in this unit!"
+        }), 400
 
-    # Save the service
+    # ===============================
+    # ACTIVATION DATE NORMALIZATION
+    # ===============================
+    activation_date = None
+    if data.get("activation_date"):
+        activation_date = datetime.strptime(
+            data["activation_date"],
+            "%Y-%m-%d"
+        ).date()
+
+    # ===============================
+    # SAVE SERVICE
+    # ===============================
     try:
         db.save_service(
-            data['site_id'], data['unit_number'], data['onu_make'], data['onu_model'], data['onu_serial'],
-            data['onu_number'], data['gpon_serial'], data['status'], data['light_level'],
-            data['pppoe_un'], data['pppoe_pw'], data['ssid_24ghz'], data['password_24ghz'],
-            data['ssid_5ghz'], data['password_5ghz'], data['customer_fullname'],
-            data['contact_number'], data['email'], data['debit_order_status'],
-            data['fluent_living'], data['product_id'], activation_date, data['comments']
+            data['site_id'],
+            data['unit_number'],
+            data['onu_make'],
+            data['onu_model'],
+            data['onu_serial'],
+            data['onu_number'],
+            data['gpon_serial'],
+            data['status'],
+            data['light_level'],
+            data['pppoe_un'],
+            data['pppoe_pw'],
+            data['ssid_24ghz'],
+            data['password_24ghz'],
+            data['ssid_5ghz'],
+            data['password_5ghz'],
+            data['customer_fullname'],
+            data['contact_number'],
+            data['email'],
+            data['debit_order_status'],
+            data['fluent_living'],
+            data['product_id'],
+            activation_date,
+            data['comments']
         )
     except Exception as e:
         print(f"DB error during save: {e}")
-        return jsonify({"msg": "Failed to save the service due to a server error."}), 500
-    
-    # LOGGING ACTIONS
+        return jsonify({
+            "msg": "Failed to save the service due to a server error."
+        }), 500
+
+    # ===============================
+    # LOGGING
+    # ===============================
     try:
-        details = describe_changes_log({},data, fields=[
-            'site_id', 'unit_number', 'onu_make', 'onu_model', 'onu_serial',
-            'onu_number', 'gpon_serial', 'status', 'light_level',
-            'pppoe_un', 'pppoe_pw', 'ssid_24ghz', 'password_24ghz',
-            'ssid_5ghz', 'password_5ghz', 'customer_fullname',
-            'contact_number', 'email', 'debit_order_status',
-            'fluent_living', 'product_id', activation_date, 'comments'
-        ])
+        details = describe_changes_log(
+            {},
+            data,
+            fields=[
+                'site_id', 'unit_number', 'onu_make', 'onu_model', 'onu_serial',
+                'onu_number', 'gpon_serial', 'status', 'light_level',
+                'pppoe_un', 'pppoe_pw', 'ssid_24ghz', 'password_24ghz',
+                'ssid_5ghz', 'password_5ghz', 'customer_fullname',
+                'contact_number', 'email', 'debit_order_status',
+                'fluent_living', 'product_id', 'activation_date', 'comments'
+            ]
+        )
+
         db.log_action(
             user_id=claims.get("email"),
             action="create",
             target_table="services",
-            target_id=None,  # or get the ID if save_service returns it
+            target_id=None,
             details=details
         )
     except Exception as e:
         print(f"⚠️ Logging error: {e}")
 
-    return jsonify({'message': 'Service added successfully'}), 200
+    return jsonify({"message": "Service added successfully"}), 200
+
+
 
 # Edit a service 
 @app.route("/api/services/editservice/<int:service_id>", methods=["GET", "PUT"])
@@ -588,30 +686,79 @@ def edit_service(service_id):
 
     if request.method == "PUT":
         new_data = request.get_json()
-        # pprint(new_data)
 
-        if new_data['activation_date'] == '':
-            new_data['activation_date'] = None
+        # ===============================
+        # EMAIL VALIDATION
+        # ===============================
+        email_value = new_data.get("email", "").strip()
 
-        # 1. Get old data for logging comparison
+        if not validate_email_list(email_value):
+            return jsonify({
+                "msg": (
+                    "Invalid email format. "
+                    "Email addresses must be separated by a comma and a space. "
+                    "Example: user1@example.com, user2@example.com"
+                )
+            }), 400
+
+        new_data["email"] = email_value
+
+        # ===============================
+        # NORMALIZE ACTIVATION DATE
+        # ===============================
+        if new_data.get("activation_date") == "":
+            new_data["activation_date"] = None
+
+        status = new_data.get("status")
+        product_id = new_data.get("product_id")
+
+        # ===============================
+        # STATUS / PACKAGE ENFORCEMENT
+        # ===============================
+        if status == "Inactive":
+            new_data["product_id"] = 17  # "No Package"
+        elif status == "Active" and not new_data.get("product_id"):
+            return jsonify({"msg": "Active services must have a package"}), 400
+
+        elif status == "Active":
+            if not product_id:
+                return jsonify({
+                    "error": "An active service must have a valid package selected."
+                }), 400
+
+            product = db.get_product_by_id(product_id)
+            if not product:
+                return jsonify({
+                    "error": "Selected package does not exist."
+                }), 400
+
+        # ===============================
+        # GET OLD DATA (FOR LOGGING)
+        # ===============================
         old_data = db.get_service_by_id(service_id)
-        # pprint(old_data)
 
-        if old_data and old_data.get('activation_date'):
-            old_data['activation_date'] = old_data['activation_date'].strftime('%Y-%m-%d')
+        if old_data and old_data.get("activation_date"):
+            old_data["activation_date"] = old_data["activation_date"].strftime("%Y-%m-%d")
 
-        # 2. Edit the service
+        # ===============================
+        # UPDATE SERVICE
+        # ===============================
         success = db.edit_service(service_id, **new_data)
-        if success > 0: 
+
+        if success > 0:
             try:
-                details = describe_changes_log(old_data, new_data, fields=[
-                'site_id', 'unit_number', 'onu_make', 'onu_model', 'onu_serial',
-                'onu_number', 'gpon_serial', 'status', 'light_level',
-                'pppoe_un', 'pppoe_pw', 'ssid_24ghz', 'password_24ghz',
-                'ssid_5ghz', 'password_5ghz', 'customer_fullname',
-                'contact_number', 'email', 'debit_order_status',
-                'fluent_living', 'product_id','activation_date', 'comments'
-                ])
+                details = describe_changes_log(
+                    old_data,
+                    new_data,
+                    fields=[
+                        'site_id', 'unit_number', 'onu_make', 'onu_model', 'onu_serial',
+                        'onu_number', 'gpon_serial', 'status', 'light_level',
+                        'pppoe_un', 'pppoe_pw', 'ssid_24ghz', 'password_24ghz',
+                        'ssid_5ghz', 'password_5ghz', 'customer_fullname',
+                        'contact_number', 'email', 'debit_order_status',
+                        'fluent_living', 'product_id', 'activation_date', 'comments'
+                    ]
+                )
 
                 db.log_action(
                     user_id=claims.get("email"),
@@ -624,9 +771,10 @@ def edit_service(service_id):
             except Exception as e:
                 print(f"⚠️ Logging error: {e}")
 
-            return jsonify({'message': 'Site edited successfully'}), 200
-        else:
-            return jsonify({'error': 'No changes made'}), 404
+            return jsonify({"message": "Service edited successfully"}), 200
+
+        return jsonify({"error": "No changes made"}), 404
+
 
 # Delete a service
 @app.route("/api/services/deleteservice", methods=["DELETE"])
@@ -1037,7 +1185,6 @@ def send_bulk_email():
 
     if not valid_emails:
         return jsonify({"status": "error", "msg": "No valid email addresses found"}), 400
-
 
     # Get site name
     site = db.get_site_by_id(site_id)

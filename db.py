@@ -75,7 +75,8 @@ class DbUtil:
                     WHERE 
                         s.id = %s
                         AND email IS NOT NULL 
-                        AND email != '';
+                        AND email != ''
+                        AND status != 'Inactive';
                 """, (site_id,))
                 
                 result = c.fetchall()

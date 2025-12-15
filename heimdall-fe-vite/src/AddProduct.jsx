@@ -34,7 +34,7 @@ const AddProduct = () => {
 
     return (
         <div className="h-screen flex items-center justify-center">
-            <div className="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-200">
+            <div className="card flex-none w-full max-w-sm shadow-2xl bg-base-200">
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
                         <div className="form-control mt-2">

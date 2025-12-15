@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from './AxiosInstance'
 
+const EMAIL_LIST_REGEX =
+  /^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})(, [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})*$/;
+
 const EditService = () => {
 
     const { id } = useParams();
@@ -30,7 +33,8 @@ const EditService = () => {
     const [activation_date, setActivationDate] = useState('');
     const [comments, setComments] = useState('');
 
-    const [showSuccess, setShowSuccess] = useState(false)
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [emailError, setEmailError] = useState('');
     
     // These two variablea are to populate the 'sites' and 'products' dropdowns
     const [sites, setSites] = useState([]);
@@ -90,8 +94,27 @@ const EditService = () => {
         .catch(error => console.log(error));
       }, [id]);
 
+    useEffect(() => {
+        if (status === 'Inactive') {
+            setProduct('17'); // reset package
+        }
+    }, [status]);
+
+
     const handleSubmit = async e => {
         e.preventDefault();
+
+        // Email validation gate
+        if (!validateEmail(email)) {
+            return;
+        }
+
+        // Status ↔ Package validation
+        if (status === 'Active' && !product_id) {
+            alert('An active service must have a package selected.');
+            return;
+        }
+
         try {
           const response = await axios.put(`/api/services/editservice/${id}`, { site_id, unit_number, onu_make, onu_model, onu_serial, gpon_serial, onu_number, status, light_level, pppoe_un, pppoe_pw, ssid_24ghz, password_24ghz, ssid_5ghz, password_5ghz, customer_fullname, contact_number, email, debit_order_status, fluent_living: fluent_living ? fluent_living : 0, activation_date, comments, product_id });
         //   console.log(response);
@@ -116,9 +139,28 @@ const EditService = () => {
     return date.toISOString().split("T")[0]; // "2025-04-27"
     };
 
+    // Validate email list format - comma and space separated
+    const validateEmail = (value) => {
+        if (!value) {
+            setEmailError('');
+            return true; // allow empty if not required
+        }
+
+        if (!EMAIL_LIST_REGEX.test(value.trim())) {
+            setEmailError(
+                "Invalid format. Separate email addresses using a comma and a space. " +
+                "Example: user1@example.com, user2@example.com"
+            );
+            return false;
+        }
+
+        setEmailError('');
+        return true;
+    };
+
     return ( 
         <div className="h-screen flex items-center justify-center">
-            <div className="card flex-shrink-0 w-full max-w-6xl shadow-2xl bg-base-200">
+            <div className="card flex-none w-full max-w-6xl shadow-2xl bg-base-200">
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
                         {/* 4 columns */}
@@ -260,15 +302,27 @@ const EditService = () => {
                                 </div>
 
                                 <div className="form-control mt-4">
-                                <label className="label">
-                                    <span className="label-text">Email Address</span>
-                                </label>
-                                <input
-                                    className="input input-bordered"
-                                    type="text"
-                                    value={email}   
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
+                                    <label className="label">
+                                        <span className="label-text">Email Address</span>
+                                    </label>
+                                    <input
+                                        className={`input input-bordered ${emailError ? 'input-error' : ''}`}
+                                        type="text"
+                                        placeholder="user1@example.com, user2@example.com"
+                                        value={email}
+                                        onChange={(e) => {
+                                            setEmail(e.target.value);
+                                            if (emailError) validateEmail(e.target.value);
+                                        }}
+                                        onBlur={(e) => validateEmail(e.target.value)}
+                                    />
+                                    {emailError && (
+                                        <label className="label">
+                                            <span className="label-text-alt text-error">
+                                                {emailError}
+                                            </span>
+                                        </label>
+                                    )}
                                 </div>
                             </div>
 
@@ -306,8 +360,10 @@ const EditService = () => {
                                     className="select select-bordered"
                                     value={product_id}
                                     onChange={(e) => setProduct(e.target.value)}
-                                    required>
-                                    <option value="">Select Product</option>
+                                    disabled={status === 'Inactive'}
+                                    required={status === 'Active'}>
+
+                                    <option value="">{status === 'Inactive' ? 'None' : 'Select Product'}</option>
                                     {products.map((p) => (
                                         <option key={p.id} value={p.id}>
                                             {p.name}
