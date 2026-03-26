@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from jinja2 import Template
 import hashlib
 import binascii
+import hmac
 import json
 import os
 import re
@@ -48,7 +49,8 @@ app = Flask(
 )
 
 # Apply CORS immediately after app creation
-CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "*"}}, allow_headers=["Content-Type", "Authorization"])
+ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'https://heimdall.aesir.co.za').split(',')
+CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": ALLOWED_ORIGINS}}, allow_headers=["Content-Type", "Authorization"])
 
 # Secret Keys
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -87,8 +89,8 @@ def verify_password(stored_password, provided_password):
     pwdhash = hashlib.pbkdf2_hmac('sha512', provided_password.encode('utf-8'), salt, 100000)
     pwdhash = binascii.hexlify(pwdhash).decode('ascii')
     
-    # Compare the hashes
-    return pwdhash == stored_pwdhash
+    # Compare the hashes (timing-safe)
+    return hmac.compare_digest(pwdhash, stored_pwdhash)
 
 # Function to refresh JWT
 @app.after_request
@@ -821,7 +823,7 @@ def delete_service():
             msg = Message(
                 subject="URGENT WARNING: Service Deleted",  # Subject can't be bold, but message body can
                 sender=app.config['MAIL_DEFAULT_SENDER'],
-                recipients=["jacquesj44@gmail.com"],
+                recipients=[os.getenv('ALERT_EMAIL', 'jacquesj44@gmail.com')],
                 html=f"""
                     <h2 style="color: red;">⚠️ Urgent Warning: Service Deleted</h2>
                     <p>This is to inform you that a service has been <strong>permanently deleted</strong>.</p>
@@ -1080,7 +1082,7 @@ def forgot_password():
     if user:
         token = serializer.dumps(email, salt='password-reset')
         # reset_url = url_for('reset_password', token=token, _external=True)
-        reset_url = f"http://heimdall.aesir.co.za/reset-password/{token}"
+        reset_url = f"{os.getenv('APP_URL', 'https://heimdall.aesir.co.za')}/reset-password/{token}"
 
         # Launch email sending in a background thread
         Thread(target=send_reset_email, args=(app, email, reset_url)).start()

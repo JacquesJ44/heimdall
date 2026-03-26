@@ -398,6 +398,15 @@ class DbUtil:
         finally:
             con.close()
 
+    ALLOWED_SERVICE_COLUMNS = {
+        'site_id', 'unit_number', 'onu_make', 'onu_model', 'onu_serial',
+        'onu_number', 'gpon_serial', 'status', 'light_level', 'pppoe_un',
+        'pppoe_pw', 'ssid_24ghz', 'password_24ghz', 'ssid_5ghz',
+        'password_5ghz', 'customer_fullname', 'contact_number', 'email',
+        'debit_order_status', 'fluent_living', 'product_id',
+        'activation_date', 'comments'
+    }
+
     # Edit a service
     def edit_service(self, service_id, **kwargs):
         """
@@ -416,9 +425,14 @@ class DbUtil:
         int
             The number of rows affected (1 if the update was successful, 0 otherwise)
         """
+        # Filter to only allowed columns to prevent SQL injection via key names
+        safe_kwargs = {k: v for k, v in kwargs.items() if k in self.ALLOWED_SERVICE_COLUMNS}
+        if not safe_kwargs:
+            return 0
+
         con = self.get_connection()
-        set_clause = ', '.join([f"{key} = %s" for key in kwargs.keys()])
-        values = list(kwargs.values())
+        set_clause = ', '.join([f"{key} = %s" for key in safe_kwargs.keys()])
+        values = list(safe_kwargs.values())
 
         try:
             with con.cursor() as c:
