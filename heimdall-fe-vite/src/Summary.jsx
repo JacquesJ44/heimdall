@@ -187,7 +187,7 @@ const Summary = () => {
         tableType="summary"
         filename={`Summary_${new Date().toISOString().slice(0, 10)}`}
       />
-
+      <strong>ALL AMOUNTS ARE EX VAT</strong>
       {/* Table */}
       <table className="min-w-full bg-white dark:bg-gray-900 rounded-2xl shadow">
         <thead>

@@ -1,7 +1,7 @@
 import { useEffect, useState, Fragment } from "react";
 import { Link } from "react-router-dom";
 import axios from './AxiosInstance';
-import { CheckCircle, XCircle, PauseCircle, Plus } from "lucide-react";
+import { CheckCircle, XCircle, PauseCircle, Plus, Clock, Star } from "lucide-react";
 
 const Services = () => {
     
@@ -17,7 +17,6 @@ const Services = () => {
         axios.get('/api/services')
           .then(response => {
             setServices(response.data);
-            // console.log(response.data);
           })
           .catch(error => {
             console.error('Error fetching data:', error);
@@ -123,7 +122,11 @@ const Services = () => {
                                         : service.status === "Inactive"
                                         ? "text-red-600 border-red-600 bg-red-50"
                                         : service.status === "Suspended"
-                                        ? "text-yellow-600 border-yellow-600 bg-yellow-50"
+                                        ? "text-blue-600 border-blue-600 bg-blue-50"
+                                        : service.status === "Cancelling"
+                                        ? "text-orange-600 border-orange-600 bg-orange-50"
+                                        : service.status === "Exempt"
+                                        ? "text-purple-600 border-purple-600 bg-purple-50"
                                         : "text-slate-500 border-slate-400 bg-slate-100"
                                     }`}
                                 >
@@ -143,6 +146,18 @@ const Services = () => {
                                     <>
                                         <PauseCircle className="w-4 h-4" />
                                         Suspended
+                                    </>
+                                    )}
+                                    {service.status === "Cancelling" && (
+                                    <>
+                                        <Clock className="w-4 h-4" />
+                                        Cancelling
+                                    </>
+                                    )}
+                                    {service.status === "Exempt" && (
+                                    <>
+                                        <Star className="w-4 h-4" />
+                                        Exempt
                                     </>
                                     )}
                                 </span>

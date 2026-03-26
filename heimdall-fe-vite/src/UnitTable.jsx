@@ -17,14 +17,21 @@ const UnitTable = ({ units }) => (
             <td className="p-3">{unit.unit_number}</td>
             <td className="p-3">{unit.package}</td>
             <td className="p-3">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                unit.status === "Active" ? "bg-green-100 text-green-600"  
-                : unit.status === "Inactive"
-                ? "text-red-600 border-red-600 bg-red-50"
-                : unit.status === "Suspended"
-                ? "text-yellow-600 border-yellow-600 bg-yellow-50"
-                : "text-slate-500 border-slate-400 bg-slate-100"
-              }`}>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  unit.status === "Active"
+                    ? "bg-green-100 text-green-600"
+                    : unit.status === "Inactive"
+                    ? "bg-red-50 text-red-600 border border-red-600"
+                    : unit.status === "Suspended"
+                    ? "bg-blue-50 text-blue-600 border border-blue-600"
+                    : unit.status === "Cancelling"
+                    ? "bg-orange-50 text-orange-600 border border-orange-600"
+                    : unit.status === "Exempt"
+                    ? "bg-purple-50 text-purple-600 border border-purple-600"
+                    : "bg-slate-100 text-slate-500 border border-slate-400"
+                }`}
+              >
                 {unit.status}
               </span>
             </td>

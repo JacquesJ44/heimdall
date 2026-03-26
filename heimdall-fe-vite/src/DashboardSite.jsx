@@ -120,7 +120,8 @@ const DashboardSite = () => {
                     <div></div>
                     <div></div>
                     <div style={{ fontSize: '0.75em', color: '#888'}}>
-                      *Suspended services not included
+                      <p>*Suspended/Exempt services not included</p>
+                      <p>*All pricing is EX VAT</p>
                     </div>
                 </div>
 

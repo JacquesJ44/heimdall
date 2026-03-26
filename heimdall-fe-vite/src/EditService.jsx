@@ -40,7 +40,7 @@ const EditService = () => {
     const [sites, setSites] = useState([]);
     const [products, setProducts] = useState([]);
     const [debitOrderStatuses] = useState(['Not Applied Yet', 'Not Done', 'Done', 'Done and Live']);
-    const [statuses] = useState(['Active', 'Inactive', 'Suspended']);
+    const [statuses] = useState(['Active', 'Inactive', 'Suspended', 'Cancelling', 'Exempt']);
 
     let navigate = useNavigate()
 
