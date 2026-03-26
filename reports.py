@@ -47,8 +47,8 @@ def calculate_po(site_id):
     current_year = now.year
     current_month = now.month
 
-    # Filter only Active services with valid package
-    df = df[df['status'] == 'Active']
+    # Filter only Active/Cancelling services with valid package
+    df = df[df['status'].isin(['Active', 'Cancelling'])]
     df = df[df['package'].notna()]
 
     # Skip services activated in the current month
@@ -96,8 +96,8 @@ def calculate_prorata(site_id):
     start_of_prev_month = datetime(prev_year, prev_month, 1)
     end_of_prev_month = datetime(prev_year, prev_month, days_in_prev_month)
 
-    # Filter only Active services with valid package
-    df = df[df['status'] == 'Active']
+    # Filter only Active/Cancelling services with valid package
+    df = df[df['status'].isin(['Active', 'Cancelling'])]
     df = df[df['package'].notna()]
 
     # Parse activation_date safely

@@ -882,10 +882,16 @@ def dashboard_site(site):
     # pprint(x)
 
     total = len(x)
-    active_units = [u for u in x if u['status'] == 'Active']
+    active_units = [u for u in x if u['status'] in ('Active', 'Cancelling')]
     total_active = len(active_units)
     total_selling = sum(u['selling_price'] for u in active_units if u['selling_price'] is not None)
     total_cost = sum(u['cost_price'] for u in active_units if u['cost_price'] is not None)
+
+    # print(f"TOTAL: {total}")
+    # print(f"ACTIVE UNITS: {len(active_units)}")
+    # print(f"TOTAL ACTIVE: {total_active}")
+    # print(f"TOTAL SELLING: {total_selling}")
+    # print(f"TOTAL COST: {total_cost}")
 
     return jsonify({
         "total": total,
@@ -910,7 +916,7 @@ def calculate_po(site):
     package_summary = defaultdict(lambda: {"count": 0, "cost_price": 0})
 
     for s in services:
-        if s["status"] == "Active" and s["package"]:  # only active services with valid packages
+        if s["status"] in ("Active", "Cancelling") and s["package"]:  # only active services with valid packages
             activation_date = s.get("activation_date")
             # print(f"{activation_date=}, {activation_date.year=}, {activation_date.month=}")
 
@@ -974,7 +980,7 @@ def calculate_prorata(site):
         cost_price = s.get("cost_price")
         package = s.get("package")
 
-        if s["status"] != 'Active' or not activation_date or not package:
+        if s["status"] not in ('Active', 'Cancelling') or not activation_date or not package:
             continue
 
         # Parse date safely
