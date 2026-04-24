@@ -11,6 +11,7 @@ import TableExportButtons from "./TableExportButtons";
 import POTable from "./POTable";
 import ProRataTable from "./ProRataTable";
 import FluentLivingTable from "./FluentLivingTable";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const DashboardSite = () => {
 
@@ -24,6 +25,9 @@ const DashboardSite = () => {
     const [fluentLiving, setFluentLiving] = useState(null);
 
     const [role, setRole] = useState(null);
+    const [incomeData, setIncomeData] = useState(null);
+    const [incomeLoading, setIncomeLoading] = useState(false);
+    const [incomeError, setIncomeError] = useState("");
 
      // ✅ Decode role from token
     useEffect(() => {
@@ -51,52 +55,59 @@ const DashboardSite = () => {
     }, [id]);
     
     const handleActionSelect = (action) => {
-    if (action === "services") {
-      setActiveView("services");
-
-    }
-
-    if (action === "po_current_month") {
-      setActiveView("po_current_month");
-      axios.get(`/api/dashboard/site/${id}/po`) // you’ll create this Flask route
-        .then(response => {
-          setPoData(response.data);
-          // console.log(response.data);
-        })
-        .catch(error => {
-          console.error("Error calculating PO:", error);
-        });
+      if (action === "services") {
+        setActiveView("services");
       }
-
-    if (action === "prorata") {
-      setActiveView("prorata");
-      axios.get(`/api/dashboard/site/${id}/prorata`) // you’ll create this Flask route
-        .then(response => {
-          setProrataData(response.data);
-          // console.log(response.data);
-        })
-        .catch(error => {
-          console.error("Error calculating PO:", error);
-        });
+      if (action === "po_current_month") {
+        setActiveView("po_current_month");
+        axios.get(`/api/dashboard/site/${id}/po`)
+          .then(response => {
+            setPoData(response.data);
+          })
+          .catch(error => {
+            console.error("Error calculating PO:", error);
+          });
       }
-      
+      if (action === "prorata") {
+        setActiveView("prorata");
+        axios.get(`/api/dashboard/site/${id}/prorata`)
+          .then(response => {
+            setProrataData(response.data);
+          })
+          .catch(error => {
+            console.error("Error calculating PO:", error);
+          });
+      }
       if (action === "fluent_living") {
         setActiveView("fluent_living");
-        axios.get(`/api/dashboard/site/${id}/fluent_living`) // you’ll create this Flask route
-        .then(response => {
-          setFluentLiving(response.data);
-          // console.log(response.data);
-        })
-        .catch(error => {
-          console.error("Error retrieving data:", error);
-        });
+        axios.get(`/api/dashboard/site/${id}/fluent_living`)
+          .then(response => {
+            setFluentLiving(response.data);
+          })
+          .catch(error => {
+            console.error("Error retrieving data:", error);
+          });
       }
-      
-      
+      if (action === "income_12mo") {
+        setActiveView("income_12mo");
+        setIncomeLoading(true);
+        setIncomeData(null);
+        setIncomeError("");
+        axios.get(`/api/dashboard/site/${id}/income`)
+          .then(response => {
+            setIncomeData(response.data);
+            setIncomeLoading(false);
+          })
+          .catch(error => {
+            setIncomeLoading(false);
+            setIncomeData(null);
+            setIncomeError(error?.response?.data?.msg || "Unable to load income data. Please refresh and try again.");
+            console.error("Error fetching income data:", error);
+          });
+      }
       if (!services || !services.units) {
         return <div>Loading site data...</div>;
       }
-      
     };
 
     return ( 
@@ -104,7 +115,9 @@ const DashboardSite = () => {
             <div className="card w-full shadow-2xl bg-base-200 p-6">
 
               <div className="flex justify-between items-center mb-4">
-                <h3><strong>Site: </strong>{id}</h3>
+                <h3 className="text-xl font-black tracking-tight text-gray-900 dark:text-gray-100 leading-tight">
+                  {id}
+                </h3>
                 {/* Only show ActionDropdown for admin/superadmin */}
                 {(role === 'admin' || role === 'superadmin') && (
                   <ActionDropdown onActionSelect={handleActionSelect} />
@@ -155,6 +168,36 @@ const DashboardSite = () => {
                   <TableExportButtons data={fluentLiving} filename={`FluentLiving_${id}`} tableType="wifi" siteName={services.units[0].site_name} />
                   <FluentLivingTable units={fluentLiving} />
                  </>
+                )}
+
+                {activeView === "income_12mo" && (
+                  <div className="mt-8">
+                    <h3 className="mb-4 text-lg font-bold">Income (Last 12 Months)</h3>
+                    {incomeLoading && <div>Loading income data...</div>}
+                    {!incomeLoading && incomeData && (
+                      <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-4">
+                        <ResponsiveContainer width="100%" height={320}>
+                          <LineChart data={incomeData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis
+                              dataKey={d => `${d.month.toString().padStart(2, '0')}/${d.year}`}
+                              tick={{ fontSize: 12 }}
+                              minTickGap={10}
+                            />
+                            <YAxis
+                              tickFormatter={v => `R${v}`}
+                              tick={{ fontSize: 12 }}
+                            />
+                            <Tooltip formatter={(v, name) => [`R${Number(v).toFixed(2)}`, name]} labelFormatter={l => `Month: ${l}`} />
+                            <Line type="monotone" dataKey="income" name="Income" stroke="#0088FE" strokeWidth={3} dot={{ r: 4 }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                    {!incomeLoading && !incomeData && (
+                      <div>{incomeError || "No income data found."}</div>
+                    )}
+                  </div>
                 )}
             </div>
         </div>

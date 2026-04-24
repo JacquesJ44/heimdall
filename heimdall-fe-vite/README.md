@@ -1,16 +1,30 @@
-# React + Vite
+How to test correctly:
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Test from the app UI:
+Open site dashboard, choose Income view. Axios sends auth header automatically.
+Test from terminal with token:
 
-Currently, two official plugins are available:
+$token = "<paste JWT from localStorage token>"
+Invoke-RestMethod `
+  -Uri "http://localhost:5000/api/dashboard/site/126%20on%20M/income?as_of=2026-04-30" `
+  -Headers @{ Authorization = "Bearer $token" }
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Validate behavior:
+Compare as_of=2026-04-23 vs as_of=2026-04-30.
+income should increase with additional active days and activations.
+loss should increase when cancellations happen mid-month.
 
-## React Compiler
+Invoke-RestMethod `
+  -Uri "http://localhost:5000/api/dashboard/site/126%20on%20M/income?as_of=2026-04-30&test_cancel_service_id=135&test_cancel_date=2026-01-01" `
+  -Headers @{ Authorization = "Bearer $token" }
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+  -----+---------+-------------+
+| id  | site_id | unit_number |
++-----+---------+-------------+
+| 132 |       3 | 104         |
+| 134 |       3 | 106         |
+| 135 |       3 | 107         |
+| 136 |       3 | 201         |
+| 137 |       3 | 202         |
+| 138 |       3 | 203         |
+| 139 |       3 | 204         |
