@@ -109,9 +109,13 @@ const EditService = () => {
             return;
         }
 
+        // Active services must have a real package, not empty or the "None" package.
+        const selectedProduct = products.find((p) => String(p.id) === String(product_id));
+        const isNonePackage = selectedProduct?.name?.trim().toLowerCase() === 'none';
+
         // Status ↔ Package validation
-        if (status === 'Active' && !product_id) {
-            alert('An active service must have a package selected.');
+        if (status === 'Active' && (!product_id || !selectedProduct || isNonePackage)) {
+            alert('An active service must have a valid package selected (not None).');
             return;
         }
 

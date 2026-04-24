@@ -853,22 +853,44 @@ def dashboard():
     if role in ("admin", "superadmin"):
         # Admins get all pie chart data
         x = db.pie_chart_data()
+        signup_rows = db.new_signups_last_n_days(30)
+        cancellation_rows = db.cancellations_last_n_days(30)
     elif role == "client":
         # Clients get pie chart data only for assigned sites
         x = db.pie_chart_data_for_user(user_id)
+        signup_rows = db.new_signups_last_n_days(30, user_id)
+        cancellation_rows = db.cancellations_last_n_days(30, user_id)
     else:
         return jsonify({"msg": "Unauthorized"}), 403
+
+    signups_by_site = {
+        row["site_name"]: row["new_signups_last_n_days"]
+        for row in signup_rows
+    }
+    cancellations_by_site = {
+        row["site_name"]: row["cancellations_last_n_days"]
+        for row in cancellation_rows
+    }
 
     chart_data = {}
 
     for row in x:
         site = row['site_name']
         if site not in chart_data:
-            chart_data[site] = []
-        chart_data[site].append({
+            chart_data[site] = {
+                "chartData": [],
+                "newSignupsLast30": 0,
+                "cancellationsLast30": 0
+            }
+        chart_data[site]["chartData"].append({
             "package": row["package_name"],
             "value": row["value"]
         })
+
+    for site in chart_data:
+        chart_data[site]["newSignupsLast30"] = signups_by_site.get(site, 0)
+        chart_data[site]["cancellationsLast30"] = cancellations_by_site.get(site, 0)
+
     # print("CHART DATA:")
     # pprint(chart_data)
     return jsonify(chart_data)
@@ -1021,6 +1043,166 @@ def fluent_living(site):
 
     #pprint(services)
     return jsonify(services)
+
+# Income per month for the last 12 months for a site
+@app.route("/api/dashboard/site/<string:site>/income", methods=["GET"])
+@jwt_required()
+def income_12mo(site):
+    site = unquote(site)
+    claims = get_jwt()
+    role = claims.get("role")
+
+    price_field = "selling_price" if role in ("admin", "superadmin") else "cost_price"
+
+    def _to_datetime(value):
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, date):
+            return datetime.combine(value, datetime.min.time())
+        text = str(value).strip()
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(text, fmt)
+            except ValueError:
+                continue
+        return None
+
+    # Pull service + product prices directly to avoid dependence on other helper shape.
+    con = db.get_connection()
+    try:
+        with con.cursor() as c:
+            c.execute(
+                """
+                SELECT s.id, s.activation_date, s.status, p.cost_price, p.selling_price
+                FROM services s
+                JOIN sites si ON s.site_id = si.id
+                JOIN products p ON s.product_id = p.id
+                WHERE si.name = %s
+                """,
+                (site,)
+            )
+            service_rows = c.fetchall()
+
+            c.execute(
+                """
+                SELECT ul.target_id, MIN(ul.timestamp) AS cancelled_at
+                FROM user_logs ul
+                JOIN services s ON s.id = ul.target_id
+                JOIN sites si ON s.site_id = si.id
+                WHERE si.name = %s
+                  AND ul.target_table = 'services'
+                  AND ul.action = 'update'
+                  AND ul.details LIKE %s
+                GROUP BY ul.target_id
+                """,
+                (site, "%status:%to 'Inactive'%")
+            )
+            cancel_rows = c.fetchall()
+    finally:
+        con.close()
+
+    cancel_dates = {row[0]: _to_datetime(row[1]) for row in cancel_rows}
+
+    test_cancel_service_id = request.args.get("test_cancel_service_id", type=int)
+    test_cancel_date_raw = request.args.get("test_cancel_date")
+    if test_cancel_service_id is not None and test_cancel_date_raw:
+        test_cancel_dt = _to_datetime(test_cancel_date_raw)
+        if test_cancel_dt is None:
+            return jsonify({"msg": "Invalid test_cancel_date format. Use YYYY-MM-DD"}), 400
+        cancel_dates[test_cancel_service_id] = test_cancel_dt
+
+    as_of_raw = request.args.get("as_of")
+    if as_of_raw:
+        try:
+            now = datetime.strptime(as_of_raw, "%Y-%m-%d")
+        except ValueError:
+            return jsonify({"msg": "Invalid as_of format. Use YYYY-MM-DD"}), 400
+    else:
+        now = datetime.now()
+
+    # Use an exclusive cutoff so current month is billed month-to-date.
+    billing_cutoff_exclusive = datetime(now.year, now.month, now.day) + timedelta(days=1)
+
+    month_starts = []
+    for i in range(11, -1, -1):
+        y = now.year if now.month - i > 0 else now.year - 1
+        m = ((now.month - i - 1) % 12) + 1
+        month_starts.append(datetime(y, m, 1))
+
+    income_by_month = {(d.year, d.month): 0.0 for d in month_starts}
+    loss_by_month = {(d.year, d.month): 0.0 for d in month_starts}
+
+    for row in service_rows:
+        service_id, activation_raw, _status, cost_price, selling_price = row
+        activation_dt = _to_datetime(activation_raw)
+        if activation_dt is None:
+            continue
+
+        price = selling_price if price_field == "selling_price" else cost_price
+        try:
+            price = float(price or 0.0)
+        except (TypeError, ValueError):
+            price = 0.0
+
+        cancel_dt = cancel_dates.get(service_id)
+
+        # PO + pro-rata style billing generalized per month:
+        # income = monthly_price * (active_days / days_in_month)
+        # loss = monthly_price * ((potential_days_without_cancel - active_days) / days_in_month)
+        for idx, start in enumerate(month_starts):
+            natural_end_exclusive = month_starts[idx + 1] if idx < len(month_starts) - 1 else datetime(
+                now.year + (1 if now.month == 12 else 0),
+                1 if now.month == 12 else now.month + 1,
+                1
+            )
+
+            end_exclusive = min(natural_end_exclusive, billing_cutoff_exclusive)
+            if start >= end_exclusive:
+                continue
+
+            # If cancelled before month starts, there is no potential billable window in this month.
+            if cancel_dt is not None and cancel_dt <= start:
+                continue
+
+            # Potential billable window ignoring cancellation
+            potential_start = max(start, activation_dt)
+            potential_end_exclusive = end_exclusive
+            if potential_start >= potential_end_exclusive:
+                continue
+
+            # Actual active window with cancellation applied
+            active_start = potential_start
+            active_end_exclusive = potential_end_exclusive
+            if cancel_dt is not None:
+                active_end_exclusive = min(active_end_exclusive, cancel_dt)
+
+            if active_start >= active_end_exclusive:
+                continue
+
+            days_in_month = (end_exclusive - start).days
+            potential_days = (potential_end_exclusive - potential_start).days
+            active_days = (active_end_exclusive - active_start).days
+            income_amount = price * (active_days / days_in_month)
+            loss_amount = price * ((potential_days - active_days) / days_in_month)
+
+            income_by_month[(start.year, start.month)] += income_amount
+            loss_by_month[(start.year, start.month)] += loss_amount
+
+    result = [
+        {
+            "year": d.year,
+            "month": d.month,
+            "income": round(income_by_month[(d.year, d.month)], 2),
+            "loss": round(loss_by_month[(d.year, d.month)], 2),
+            "net": round(income_by_month[(d.year, d.month)] - loss_by_month[(d.year, d.month)], 2),
+            "total": round(income_by_month[(d.year, d.month)], 2)
+        }
+        for d in month_starts
+    ]
+
+    return jsonify(result)
 
 @app.route("/api/summary", methods=["GET"])
 @jwt_required()

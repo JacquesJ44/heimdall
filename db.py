@@ -489,6 +489,80 @@ class DbUtil:
         finally:
             con.close()
 
+    def new_signups_last_n_days(self, days=30, user_id=None):
+        con = self.get_connection()
+        try:
+            with con.cursor() as c:
+                if user_id:
+                    c.execute("""
+                        SELECT
+                            si.name AS site_name,
+                            COUNT(*) AS new_signups_last_n_days
+                        FROM services s
+                        JOIN sites si ON s.site_id = si.id
+                        JOIN client_site_access csa ON csa.site_id = si.id
+                        WHERE s.activation_date >= DATE_SUB(CURDATE(), INTERVAL %s DAY)
+                          AND csa.user_id = %s
+                        GROUP BY si.name
+                    """, (days, user_id))
+                else:
+                    c.execute("""
+                        SELECT
+                            si.name AS site_name,
+                            COUNT(*) AS new_signups_last_n_days
+                        FROM services s
+                        JOIN sites si ON s.site_id = si.id
+                        WHERE s.activation_date >= DATE_SUB(CURDATE(), INTERVAL %s DAY)
+                        GROUP BY si.name
+                    """, (days,))
+
+                rows = c.fetchall()
+                col_names = [col[0] for col in c.description]
+                return [dict(zip(col_names, row)) for row in rows]
+        finally:
+            con.close()
+
+    def cancellations_last_n_days(self, days=30, user_id=None):
+        con = self.get_connection()
+        try:
+            with con.cursor() as c:
+                if user_id:
+                    c.execute("""
+                        SELECT
+                            si.name AS site_name,
+                            COUNT(*) AS cancellations_last_n_days
+                        FROM user_logs ul
+                        JOIN services s ON s.id = ul.target_id
+                        JOIN sites si ON si.id = s.site_id
+                        JOIN client_site_access csa ON csa.site_id = si.id
+                        WHERE ul.target_table = 'services'
+                          AND ul.action = 'update'
+                          AND ul.details LIKE %s
+                          AND ul.timestamp >= DATE_SUB(NOW(), INTERVAL %s DAY)
+                          AND csa.user_id = %s
+                        GROUP BY si.name
+                    """, ("%status:%to 'Inactive'%", days, user_id))
+                else:
+                    c.execute("""
+                        SELECT
+                            si.name AS site_name,
+                            COUNT(*) AS cancellations_last_n_days
+                        FROM user_logs ul
+                        JOIN services s ON s.id = ul.target_id
+                        JOIN sites si ON si.id = s.site_id
+                        WHERE ul.target_table = 'services'
+                          AND ul.action = 'update'
+                          AND ul.details LIKE %s
+                          AND ul.timestamp >= DATE_SUB(NOW(), INTERVAL %s DAY)
+                        GROUP BY si.name
+                    """, ("%status:%to 'Inactive'%", days))
+
+                rows = c.fetchall()
+                col_names = [col[0] for col in c.description]
+                return [dict(zip(col_names, row)) for row in rows]
+        finally:
+            con.close()
+
 
     def services_per_site(self, site):
         con = self.get_connection()
@@ -619,7 +693,7 @@ class DbUtil:
                     SELECT id, user_id, action, target_table, target_id, ip_address, timestamp, details
                     FROM user_logs
                     ORDER BY timestamp DESC
-                    LIMIT 100
+                    LIMIT 200
                 """
                 c.execute(query)
                 logs = c.fetchall()
