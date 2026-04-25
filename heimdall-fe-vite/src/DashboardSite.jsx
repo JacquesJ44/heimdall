@@ -171,34 +171,84 @@ const DashboardSite = () => {
                 )}
 
                 {activeView === "income_12mo" && (
-                  <div className="mt-8">
-                    <h3 className="mb-4 text-lg font-bold">Income (Last 12 Months)</h3>
-                    {incomeLoading && <div>Loading income data...</div>}
-                    {!incomeLoading && incomeData && (
-                      <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-4">
-                        <ResponsiveContainer width="100%" height={320}>
-                          <LineChart data={incomeData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis
-                              dataKey={d => `${d.month.toString().padStart(2, '0')}/${d.year}`}
-                              tick={{ fontSize: 12 }}
-                              minTickGap={10}
-                            />
-                            <YAxis
-                              tickFormatter={v => `R${v}`}
-                              tick={{ fontSize: 12 }}
-                            />
-                            <Tooltip formatter={(v, name) => [`R${Number(v).toFixed(2)}`, name]} labelFormatter={l => `Month: ${l}`} />
-                            <Line type="monotone" dataKey="income" name="Income" stroke="#0088FE" strokeWidth={3} dot={{ r: 4 }} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )}
-                    {!incomeLoading && !incomeData && (
-                      <div>{incomeError || "No income data found."}</div>
-                    )}
-                  </div>
-                )}
+                <div className="mt-8">
+                  <h3 className="mb-4 text-lg font-bold">Income (Last 12 Months)</h3>
+
+                  {incomeLoading && <div>Loading income data...</div>}
+
+                  {!incomeLoading && incomeData && (
+                    <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-4">
+                      <ResponsiveContainer width="100%" height={320}>
+                        <LineChart
+                          data={
+                            incomeData.map((d, i, arr) => ({
+                              ...d,
+                              delta: i === 0 ? 0 : d.income - arr[i - 1].income
+                            }))
+                          }
+                          margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+
+                          <XAxis
+                            dataKey={(d) =>
+                              `${d.month.toString().padStart(2, "0")}/${d.year}`
+                            }
+                            tick={{ fontSize: 12 }}
+                            minTickGap={10}
+                          />
+
+                          <YAxis
+                            domain={[
+                              (dataMin) => Math.floor(dataMin * 0.95),
+                              (dataMax) => Math.ceil(dataMax * 1.05)
+                            ]}
+                            tickFormatter={(v) => `R${v.toLocaleString()}`}
+                            tick={{ fontSize: 12 }}
+                            tickCount={7}
+                          />
+
+                          <Tooltip
+                            labelStyle={{ color: "#111827", fontWeight: 600 }}
+                            formatter={(value, name) => {
+                              if (name === "Change") {
+                                const sign = value >= 0 ? "+" : "";
+                                return [`${sign}R${Number(value).toFixed(2)}`, name];
+                              }
+                              return [`R${Number(value).toFixed(2)}`, name];
+                            }}
+                            labelFormatter={(label) => `Month: ${label}`}
+                          />
+
+                          {/* Total Income */}
+                          <Line
+                            type="monotone"
+                            dataKey="income"
+                            name="Income"
+                            stroke="#0088FE"
+                            strokeWidth={3}
+                            dot={{ r: 4 }}
+                          />
+
+                          {/* Month-to-month Change
+                          <Line
+                            type="linear"
+                            dataKey="delta"
+                            name="Change"
+                            stroke="#FF8042"
+                            strokeWidth={2}
+                            dot={{ r: 3 }}
+                          /> */}
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {!incomeLoading && !incomeData && (
+                    <div>{incomeError || "No income data found."}</div>
+                  )}
+                </div>
+              )}
             </div>
         </div>
      );
