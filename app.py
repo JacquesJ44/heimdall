@@ -94,11 +94,18 @@ def verify_password(stored_password, provided_password):
 @app.after_request
 def refresh_expiring_jwts(response):
     try:
-        exp_timestamp = get_jwt()["exp"]
+        claims = get_jwt()
+        exp_timestamp = claims["exp"]
         now = datetime.now(timezone.utc)
         target_timestamp = datetime.timestamp(now + timedelta(minutes=2))
         if target_timestamp > exp_timestamp:
-            access_token = create_access_token(identity=get_jwt_identity())
+            access_token = create_access_token(
+                identity=get_jwt_identity(),
+                additional_claims={
+                    "email": claims.get("email"),
+                    "role": claims.get("role")
+                }
+            )
             data = response.get_json()
             if type(data) is dict:
                 data["access_token"] = access_token 
@@ -1085,7 +1092,7 @@ def income_12mo(site):
 
             c.execute(
                 """
-                SELECT ul.target_id, MIN(ul.timestamp) AS cancelled_at
+                SELECT ul.target_id, MAX(ul.timestamp) AS cancelled_at
                 FROM user_logs ul
                 JOIN services s ON s.id = ul.target_id
                 JOIN sites si ON s.site_id = si.id
@@ -1199,6 +1206,9 @@ def income_12mo(site):
         }
         for d in month_starts
     ]
+
+    print("INCOME RESULT:")
+    pprint(result)
 
     return jsonify(result)
 
