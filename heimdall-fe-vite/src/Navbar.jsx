@@ -42,7 +42,7 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
         case "admin":
           return ["Dashboard", "Services", "Products", "Sites"];
         case "superadmin":
-          return ["Dashboard", "Services", "Products", "Sites", "Register New User", "Summary", "Logs"];
+          return ["Dashboard", "Services", "Products", "Sites", "User Management", "Summary", "Logs"];
         default:
           return [];
       }
@@ -87,8 +87,8 @@ const Navbar = ({ token, setToken, message, setMessage }) => {
               {getLinksByRole(role).includes("Sites") && (
                 <li className="mx-2"><Link to="/sites">Sites</Link></li>
               )}
-              {getLinksByRole(role).includes("Register New User") && (
-                <li className="mx-2"><Link to="/register">Register New User</Link></li>
+              {getLinksByRole(role).includes("User Management") && (
+                <li className="mx-2"><Link to="/register">User Management</Link></li>
               )}
               {getLinksByRole(role).includes("Summary") && (
                 <li className="mx-2"><Link to="/summary">Summary</Link></li>

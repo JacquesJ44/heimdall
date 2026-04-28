@@ -51,15 +51,15 @@ function App() {
                               <DashboardSite />
                             </PrivateRoute>} />
             <Route path="/register" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["superadmin"]}>
                               <Register />
                             </PrivateRoute>}/>
             <Route path="/register/users" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["superadmin"]}>
                               <UserManagement />
                             </PrivateRoute>}/>
             <Route path="/register/users/:id/sites" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["superadmin"]}>
                               <AssignSites />
                             </PrivateRoute>}/>
             <Route path="/summary"
@@ -67,47 +67,47 @@ function App() {
                               <Summary />
                             </PrivateRoute>}/>
             <Route path="/sites" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["admin", "superadmin"]}>
                               <Sites />
                             </PrivateRoute>}/>
             <Route path="/sites/addsite" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["admin", "superadmin"]}>
                               <AddSite />
                             </PrivateRoute>}/>
             <Route path="/sites/editsite/:id" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["admin", "superadmin"]}>
                               <EditSite />
                             </PrivateRoute>}/>            
             <Route path="/sites/bulkemail" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["admin", "superadmin"]}>
                               <BulkEmail />
                             </PrivateRoute>}/>            
             <Route path="/products" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["admin", "superadmin"]}>
                               <Products />
                             </PrivateRoute>}/>
             <Route path="/products/addproduct" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["admin", "superadmin"]}>
                               <AddProduct />
                             </PrivateRoute>}/>
             <Route path="/products/editproduct/:id" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["admin", "superadmin"]}>
                               <EditProduct />
                             </PrivateRoute>}/> 
             <Route path="/services" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["admin", "superadmin"]}>
                               <Services />
                             </PrivateRoute>}/> 
             <Route path="/services/addservice" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["admin", "superadmin"]}>
                               <AddService />
                             </PrivateRoute>}/> 
             <Route path="/services/editservice/:id" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["admin", "superadmin"]}>
                               <EditService />
                             </PrivateRoute>}/> 
             <Route path="/logs" 
-                    element={<PrivateRoute>
+                  element={<PrivateRoute allowedRoles={["superadmin"]}>
                               <LogsPage />
                             </PrivateRoute>}/> 
           </Routes>

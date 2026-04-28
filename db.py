@@ -502,6 +502,40 @@ class DbUtil:
                         JOIN sites si ON s.site_id = si.id
                         JOIN client_site_access csa ON csa.site_id = si.id
                         WHERE s.activation_date >= DATE_SUB(CURDATE(), INTERVAL %s DAY)
+                          AND (
+                                -- Keep true new signups (no activation_date update log tied to this row).
+                                NOT EXISTS (
+                                    SELECT 1
+                                    FROM user_logs ul_ad
+                                    WHERE ul_ad.target_table = 'services'
+                                      AND ul_ad.action = 'update'
+                                      AND ul_ad.target_id = s.id
+                                      AND ul_ad.details LIKE '%%activation_date:%%to %%'
+                                      AND ul_ad.details LIKE CONCAT('%%to ''', DATE_FORMAT(s.activation_date, '%%Y-%%m-%%d'), '''%%')
+                                )
+                                OR
+                                -- If activation_date was updated, only count it when there was a real cancellation.
+                                EXISTS (
+                                    SELECT 1
+                                    FROM user_logs ul_inactive
+                                    WHERE ul_inactive.target_table = 'services'
+                                      AND ul_inactive.action = 'update'
+                                      AND ul_inactive.target_id = s.id
+                                      AND ul_inactive.details LIKE '%%status:%%to ''Inactive''%%'
+                                      AND ul_inactive.timestamp <= COALESCE(
+                                          (
+                                              SELECT MAX(ul_ad2.timestamp)
+                                              FROM user_logs ul_ad2
+                                              WHERE ul_ad2.target_table = 'services'
+                                                AND ul_ad2.action = 'update'
+                                                AND ul_ad2.target_id = s.id
+                                                AND ul_ad2.details LIKE '%%activation_date:%%to %%'
+                                                AND ul_ad2.details LIKE CONCAT('%%to ''', DATE_FORMAT(s.activation_date, '%%Y-%%m-%%d'), '''%%')
+                                          ),
+                                          NOW()
+                                      )
+                                )
+                          )
                           AND csa.user_id = %s
                         GROUP BY si.name
                     """, (days, user_id))
@@ -513,6 +547,40 @@ class DbUtil:
                         FROM services s
                         JOIN sites si ON s.site_id = si.id
                         WHERE s.activation_date >= DATE_SUB(CURDATE(), INTERVAL %s DAY)
+                          AND (
+                                -- Keep true new signups (no activation_date update log tied to this row).
+                                NOT EXISTS (
+                                    SELECT 1
+                                    FROM user_logs ul_ad
+                                    WHERE ul_ad.target_table = 'services'
+                                      AND ul_ad.action = 'update'
+                                      AND ul_ad.target_id = s.id
+                                      AND ul_ad.details LIKE '%%activation_date:%%to %%'
+                                      AND ul_ad.details LIKE CONCAT('%%to ''', DATE_FORMAT(s.activation_date, '%%Y-%%m-%%d'), '''%%')
+                                )
+                                OR
+                                -- If activation_date was updated, only count it when there was a real cancellation.
+                                EXISTS (
+                                    SELECT 1
+                                    FROM user_logs ul_inactive
+                                    WHERE ul_inactive.target_table = 'services'
+                                      AND ul_inactive.action = 'update'
+                                      AND ul_inactive.target_id = s.id
+                                      AND ul_inactive.details LIKE '%%status:%%to ''Inactive''%%'
+                                      AND ul_inactive.timestamp <= COALESCE(
+                                          (
+                                              SELECT MAX(ul_ad2.timestamp)
+                                              FROM user_logs ul_ad2
+                                              WHERE ul_ad2.target_table = 'services'
+                                                AND ul_ad2.action = 'update'
+                                                AND ul_ad2.target_id = s.id
+                                                AND ul_ad2.details LIKE '%%activation_date:%%to %%'
+                                                AND ul_ad2.details LIKE CONCAT('%%to ''', DATE_FORMAT(s.activation_date, '%%Y-%%m-%%d'), '''%%')
+                                          ),
+                                          NOW()
+                                      )
+                                )
+                          )
                         GROUP BY si.name
                     """, (days,))
 
