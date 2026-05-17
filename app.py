@@ -21,6 +21,7 @@ import re
 
 from pprint import pprint
 from urllib.parse import unquote
+from income_calculator import calculate_income_12mo, to_datetime
 
 load_dotenv()
 
@@ -1061,21 +1062,6 @@ def income_12mo(site):
 
     price_field = "selling_price" if role in ("admin", "superadmin") else "cost_price"
 
-    def _to_datetime(value):
-        if value is None:
-            return None
-        if isinstance(value, datetime):
-            return value
-        if isinstance(value, date):
-            return datetime.combine(value, datetime.min.time())
-        text = str(value).strip()
-        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
-            try:
-                return datetime.strptime(text, fmt)
-            except ValueError:
-                continue
-        return None
-
     # Pull service + product prices directly to avoid dependence on other helper shape.
     con = db.get_connection()
     try:
@@ -1110,12 +1096,12 @@ def income_12mo(site):
     finally:
         con.close()
 
-    cancel_dates = {row[0]: _to_datetime(row[1]) for row in cancel_rows}
+    cancel_dates = {row[0]: to_datetime(row[1]) for row in cancel_rows}
 
     test_cancel_service_id = request.args.get("test_cancel_service_id", type=int)
     test_cancel_date_raw = request.args.get("test_cancel_date")
     if test_cancel_service_id is not None and test_cancel_date_raw:
-        test_cancel_dt = _to_datetime(test_cancel_date_raw)
+        test_cancel_dt = to_datetime(test_cancel_date_raw)
         if test_cancel_dt is None:
             return jsonify({"msg": "Invalid test_cancel_date format. Use YYYY-MM-DD"}), 400
         cancel_dates[test_cancel_service_id] = test_cancel_dt
@@ -1129,85 +1115,12 @@ def income_12mo(site):
     else:
         now = datetime.now()
 
-    # Use an exclusive cutoff so current month is billed month-to-date.
-    billing_cutoff_exclusive = datetime(now.year, now.month, now.day) + timedelta(days=1)
-
-    month_starts = []
-    for i in range(11, -1, -1):
-        y = now.year if now.month - i > 0 else now.year - 1
-        m = ((now.month - i - 1) % 12) + 1
-        month_starts.append(datetime(y, m, 1))
-
-    income_by_month = {(d.year, d.month): 0.0 for d in month_starts}
-    loss_by_month = {(d.year, d.month): 0.0 for d in month_starts}
-
-    for row in service_rows:
-        service_id, activation_raw, _status, cost_price, selling_price = row
-        activation_dt = _to_datetime(activation_raw)
-        if activation_dt is None:
-            continue
-
-        price = selling_price if price_field == "selling_price" else cost_price
-        try:
-            price = float(price or 0.0)
-        except (TypeError, ValueError):
-            price = 0.0
-
-        cancel_dt = cancel_dates.get(service_id)
-
-        # PO + pro-rata style billing generalized per month:
-        # income = monthly_price * (active_days / days_in_month)
-        # loss = monthly_price * ((potential_days_without_cancel - active_days) / days_in_month)
-        for idx, start in enumerate(month_starts):
-            natural_end_exclusive = month_starts[idx + 1] if idx < len(month_starts) - 1 else datetime(
-                now.year + (1 if now.month == 12 else 0),
-                1 if now.month == 12 else now.month + 1,
-                1
-            )
-
-            end_exclusive = min(natural_end_exclusive, billing_cutoff_exclusive)
-            if start >= end_exclusive:
-                continue
-
-            # If cancelled before month starts, there is no potential billable window in this month.
-            if cancel_dt is not None and cancel_dt <= start:
-                continue
-
-            # Potential billable window ignoring cancellation
-            potential_start = max(start, activation_dt)
-            potential_end_exclusive = end_exclusive
-            if potential_start >= potential_end_exclusive:
-                continue
-
-            # Actual active window with cancellation applied
-            active_start = potential_start
-            active_end_exclusive = potential_end_exclusive
-            if cancel_dt is not None:
-                active_end_exclusive = min(active_end_exclusive, cancel_dt)
-
-            if active_start >= active_end_exclusive:
-                continue
-
-            days_in_month = (end_exclusive - start).days
-            potential_days = (potential_end_exclusive - potential_start).days
-            active_days = (active_end_exclusive - active_start).days
-            income_amount = price * (active_days / days_in_month)
-            loss_amount = price * ((potential_days - active_days) / days_in_month)
-
-            income_by_month[(start.year, start.month)] += income_amount
-            loss_by_month[(start.year, start.month)] += loss_amount
-
-    result = [
-        {
-            "year": d.year,
-            "month": d.month,
-            "income": round(income_by_month[(d.year, d.month)], 2),
-            "loss": round(loss_by_month[(d.year, d.month)], 2),
-            "net": round(income_by_month[(d.year, d.month)] - loss_by_month[(d.year, d.month)], 2),
-            "total": round(income_by_month[(d.year, d.month)], 2)
-        }
-        for d in month_starts
-    ]
+    result = calculate_income_12mo(
+        service_rows=service_rows,
+        cancel_dates=cancel_dates,
+        now=now,
+        price_field=price_field,
+    )
 
     print("INCOME RESULT:")
     pprint(result)
