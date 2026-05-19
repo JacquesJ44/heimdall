@@ -695,12 +695,14 @@ def edit_service(service_id):
         return jsonify({'error': 'Site not found'}), 404
 
     if request.method == "PUT":
-        new_data = request.get_json()
+        new_data = request.get_json(silent=True)
+        if not isinstance(new_data, dict):
+            return jsonify({"msg": "Invalid or missing JSON body"}), 400
 
         # ===============================
         # EMAIL VALIDATION
         # ===============================
-        email_value = new_data.get("email", "").strip()
+        email_value = str(new_data.get("email") or "").strip()
 
         if not validate_email_list(email_value):
             return jsonify({
