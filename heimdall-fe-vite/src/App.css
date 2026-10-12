@@ -3,7 +3,7 @@
 }
 
 .App-logo {
-  height: 10vmin;
+  height: clamp(2.5rem, 10vmin, 5rem);
   pointer-events: none;
 }
 

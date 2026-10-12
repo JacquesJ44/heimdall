@@ -111,10 +111,10 @@ const DashboardSite = () => {
     };
 
     return ( 
-        <div className="min-h-screen bg-base-100 p-4">
-            <div className="card w-full shadow-2xl bg-base-200 p-6">
+        <div className="min-h-screen bg-base-100 p-2 sm:p-4">
+            <div className="card w-full shadow-2xl bg-base-200 p-3 sm:p-6">
 
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
                 <h3 className="text-xl font-black tracking-tight text-gray-900 dark:text-gray-100 leading-tight">
                   {id}
                 </h3>
@@ -124,15 +124,15 @@ const DashboardSite = () => {
                 )}
               </div>
 
-                <div className="grid grid-cols-4 gap-4 my-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 my-4">
                     <Card title="Total Units" value={services.total} />
                     <Card title="Active Units" value={services.active} />
                     <Card title="Sellthrough percentage" value={`${((services.active / services.total) * 100).toFixed(2)}%`} />
                     <Card title="Active Revenue *" value={`R ${role === "client" ? services.total_cost : services.total_selling}`} />
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div style={{ fontSize: '0.75em', color: '#888'}}>
+                    <div className="hidden lg:block"></div>
+                    <div className="hidden lg:block"></div>
+                    <div className="hidden lg:block"></div>
+                    <div className="col-span-2 lg:col-span-1" style={{ fontSize: '0.75em', color: '#888'}}>
                       <p>*Suspended/Exempt services not included</p>
                       <p>*All pricing is EX VAT</p>
                     </div>

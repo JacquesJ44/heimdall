@@ -1,7 +1,7 @@
 import { useState,useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from './AxiosInstance'
-import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Plus, Minus } from "lucide-react";
 
 
@@ -27,13 +27,13 @@ const Dashboard = () => {
 
   return (
 <> 
-  <div className="min-h-screen bg-base-100 p-4">
-    <div className="card w-full shadow-2xl bg-base-200 p-6">
+  <div className="min-h-screen bg-base-100 p-2 sm:p-4">
+    <div className="card w-full shadow-2xl bg-base-200 p-3 sm:p-6">
       {/* <div className="card-body"> */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-20" >
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-4 sm:gap-x-12" >
           {Object.entries(data).map(([site, siteData], idx) => (
-            <div key={site} style={{ marginBottom: '40px' }}>
-              <div className="flex items-start justify-between gap-3 mb-3">
+            <div key={site} className="min-w-0 mb-10">
+              <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
                 <div>
                   <h3 className="text-xl font-black tracking-tight text-gray-900 dark:text-gray-100 leading-tight">
                     {site}
@@ -64,7 +64,8 @@ const Dashboard = () => {
                   {/* <CircleArrowRight className="w-4 h-4" /> */}
                 </Link>
               </div>
-              <PieChart width={400} height={400}>
+              <ResponsiveContainer width="100%" height={380}>
+              <PieChart>
                 <Pie
                   dataKey="value"
                   nameKey='package'
@@ -82,6 +83,7 @@ const Dashboard = () => {
                 <Tooltip />
                 <Legend />
               </PieChart>
+              </ResponsiveContainer>
             </div>
           ))}
       {/* </div> */}

@@ -21,7 +21,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="h-screen flex items-center justify-center">
+    <div className="w-full flex items-center justify-center py-6">
         <div className="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-200">
             <div className="card-body">
                 <form onSubmit={handleSubmit}>
@@ -29,7 +29,7 @@ export default function ForgotPassword() {
                         <label className="label">
                             <span className="label-text">Email</span>    
                         </label>
-                        <input className="input input-bordered w-full max-w-xs"
+                        <input className="input input-bordered w-full"
                             type="email" 
                             placeholder="Type your email here"  
                             required

@@ -1124,8 +1124,8 @@ def income_12mo(site):
         price_field=price_field,
     )
 
-    print("INCOME RESULT:")
-    pprint(result)
+    # print("INCOME RESULT:")
+    # pprint(result)
 
     return jsonify(result)
 

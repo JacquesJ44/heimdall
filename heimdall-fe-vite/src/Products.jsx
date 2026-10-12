@@ -47,14 +47,15 @@ const Products = () => {
       };
 
     return ( 
-        <div className="min-h-screen bg-base-100 p-4">
-            <div className="card w-full shadow-2xl bg-base-200 p-6">
+        <div className="min-h-screen bg-base-100 p-2 sm:p-4">
+            <div className="card w-full shadow-2xl bg-base-200 p-3 sm:p-6">
                     <div className="flex justify-end max-w mb-5">
                         <Link to='/products/addproduct' className="btn btn-accent">
                             <Plus size={18} /> Add New Product
                         </Link>
                     </div>
-                    <table className="table table-full text-sm">
+                    <div className="overflow-x-auto pb-40 -mb-40">
+<table className="table table-full text-sm">
                         <thead>
                             <tr>
                                 <th>Name</th> 
@@ -82,9 +83,10 @@ const Products = () => {
                             ))}
                         </tbody>
                     </table>
+</div>
                     {showModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg">
+                    <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg mx-4">
                         <h3 className="text-lg font-semibold mb-4">Are you sure?</h3>
                         <div className="flex justify-end gap-4">
                         <button
@@ -104,7 +106,7 @@ const Products = () => {
                     </div>
                 )}
                 {showSuccess && (
-                    <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
+                    <div className="fixed top-6 left-1/2 transform -translate-x-1/2 max-w-[90vw] bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
                     ✅ Product deleted successfully!
                     </div>
                 )}

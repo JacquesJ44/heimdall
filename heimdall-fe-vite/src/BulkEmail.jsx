@@ -81,10 +81,10 @@ const handleSubmit = async (e) => {
 };
 
 return (
-  <div className="w-full max-w-5xl mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow p-6">
+  <div className="w-full max-w-5xl mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow p-3 sm:p-6">
     <h2 className="text-xl font-semibold mb-4">Bulk Email</h2>
 
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Left Column: Form */}
       <div>
         <form onSubmit={handleSubmit} className="space-y-4">

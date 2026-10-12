@@ -26,7 +26,7 @@ const Login = ({ setToken }) => {
   };
 
     return (
-        <div className="h-screen flex items-center justify-center">
+        <div className="w-full flex items-center justify-center py-6">
             <div className="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-200">
                 {/* <div className="bg-red-500 p-10 text-white text-4xl !important">
                 TAILWIND FORCE TEST
@@ -45,7 +45,7 @@ const Login = ({ setToken }) => {
                             <label className="label">
                                 <span className="label-text">Username</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="email" 
                                 placeholder="Username"  
                                 required
@@ -58,7 +58,7 @@ const Login = ({ setToken }) => {
                             <label className="label">
                                 <span className="label-text">Password</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="password" 
                                 placeholder="Password"
                                 required

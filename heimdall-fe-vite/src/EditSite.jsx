@@ -46,7 +46,7 @@ const EditSite = () => {
       };
 
     return (          
-        <div className="h-screen flex items-center justify-center">
+        <div className="w-full flex items-center justify-center py-6">
             <div className="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-200">
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
@@ -54,7 +54,7 @@ const EditSite = () => {
                             <label className="label">
                                 <span className="label-text">Name</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="text" 
                                 // placeholder="Name"  
                                 required
@@ -67,7 +67,7 @@ const EditSite = () => {
                             <label className="label">
                                 <span className="label-text">Street</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="text" 
                                 // placeholder="Street"  
                                 required
@@ -80,7 +80,7 @@ const EditSite = () => {
                             <label className="label">
                                 <span className="label-text">Suburb</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="text" 
                                 // placeholder="Suburb"  
                                 required
@@ -93,7 +93,7 @@ const EditSite = () => {
                             <label className="label">
                                 <span className="label-text">Running Cost</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="text" 
                                 // placeholder="Suburb"  
                                 required
@@ -107,7 +107,7 @@ const EditSite = () => {
                         </div>
                     </form>
                     {showSuccess && (
-                                <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
+                                <div className="fixed top-6 left-1/2 transform -translate-x-1/2 max-w-[90vw] bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
                                 ✅ Site edited succesfully!
                                 </div>
                             )}               

@@ -11,8 +11,9 @@ const UserManagement = () => {
   }, []);
 
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-6 w-full">
       <h1 className="text-2xl font-semibold mb-4">User Management</h1>
+      <div className="overflow-x-auto">
       <table className="table w-full">
         <thead>
           <tr>
@@ -44,6 +45,7 @@ const UserManagement = () => {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 };

@@ -170,7 +170,7 @@ const TableExportButtons = ({ data = [], filename = "export", tableType, siteNam
 
 
   return (
-    <div className="flex gap-2 mb-4">
+    <div className="flex flex-wrap gap-2 mb-4">
       <CSVLink
         data={includeTotal ? [...formattedData, getTotalRow()] : formattedData}
         filename={`${filename}.csv`}

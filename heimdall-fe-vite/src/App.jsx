@@ -35,7 +35,7 @@ function App() {
       <div className="min-h-screen flex flex-col bg-base-200">
         <Navbar token={token} setToken={setToken} message={message} setMessage={setMessage}/>
 
-        <main className="grow flex items-center justify-center">
+        <main className="grow flex items-center justify-center w-full min-w-0 p-2 sm:p-4 *:min-w-0 *:max-w-full">
           <Routes> 
             <Route path='/' element={ token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
             <Route path="/login" element={<Login setToken={setToken} />} />

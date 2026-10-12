@@ -33,7 +33,7 @@ const AddProduct = () => {
       };
 
     return (
-        <div className="h-screen flex items-center justify-center">
+        <div className="w-full flex items-center justify-center py-6">
             <div className="card flex-none w-full max-w-sm shadow-2xl bg-base-200">
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
@@ -41,7 +41,7 @@ const AddProduct = () => {
                             <label className="label">
                                 <span className="label-text">Name</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="text" 
                                 placeholder="Name"  
                                 required
@@ -54,7 +54,7 @@ const AddProduct = () => {
                             <label className="label">
                                 <span className="label-text">Selling Price</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="text" 
                                 placeholder="Selling Price"  
                                 required
@@ -67,7 +67,7 @@ const AddProduct = () => {
                             <label className="label">
                                 <span className="label-text">Cost Price</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="text" 
                                 placeholder="Cost Price"  
                                 required
@@ -81,7 +81,7 @@ const AddProduct = () => {
                         </div>
                     </form>
                     {showSuccess && (
-                                <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
+                                <div className="fixed top-6 left-1/2 transform -translate-x-1/2 max-w-[90vw] bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
                                 ✅ Product added succesfully!
                                 </div>
                             )}               

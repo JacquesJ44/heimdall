@@ -47,9 +47,9 @@ const AssignSites = () => {
   
 
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-6 w-full">
       <h1 className="text-xl font-semibold mb-4">Assign Sites</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
         {sites.map((site) => (
           <label key={site.id} className="flex items-center space-x-2">
             <input
@@ -66,7 +66,7 @@ const AssignSites = () => {
         Save
       </button>
       {showSuccess && (
-                        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
+                        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 max-w-[90vw] bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
                         ✅ Sites Assigned!
                         </div>
                             )}

@@ -31,7 +31,7 @@ const Register = () => {
   };
 
     return (
-        <div className="h-screen flex items-center justify-center">
+        <div className="w-full flex items-center justify-center py-6">
             <div className="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-200">
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
@@ -39,7 +39,7 @@ const Register = () => {
                             <label className="label">
                                 <span className="label-text">Name</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="text" 
                                 placeholder="Name"  
                                 required
@@ -52,7 +52,7 @@ const Register = () => {
                             <label className="label">
                                 <span className="label-text">Surname</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="text" 
                                 placeholder="Surname"  
                                 required
@@ -65,7 +65,7 @@ const Register = () => {
                             <label className="label">
                                 <span className="label-text">Email</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="email" 
                                 placeholder="Email"  
                                 required
@@ -78,7 +78,7 @@ const Register = () => {
                             <label className="label">
                                 <span className="label-text">Password</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="password" 
                                 placeholder="Password"
                                 required
@@ -91,7 +91,7 @@ const Register = () => {
                             <label className="label">
                                 <span className="label-text">Confirm Password</span>    
                             </label>
-                            <input className="input input-bordered w-full max-w-xs"
+                            <input className="input input-bordered w-full"
                                 type="password" 
                                 placeholder="Password"
                                 required
@@ -101,7 +101,7 @@ const Register = () => {
                         </div>
 
                         <div className="form-control mt-6">
-                            <div className="flex justify-between">
+                            <div className="flex flex-wrap justify-between gap-2">
                                 <button className="btn btn-accent">Create User</button>
                                 <button type="button" className="btn btn-warning" onClick={() => navigate("/register/users")}>Manage Users</button>
                             </div>
@@ -109,7 +109,7 @@ const Register = () => {
 
                     </form>
                     {showSuccess && (
-                                <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
+                                <div className="fixed top-6 left-1/2 transform -translate-x-1/2 max-w-[90vw] bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
                                 ✅ User registered!
                                 </div>
                             )}

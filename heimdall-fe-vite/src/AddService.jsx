@@ -127,12 +127,12 @@ const AddService = () => {
 
 
     return ( 
-        <div className="h-screen flex items-center justify-center">
+        <div className="w-full flex items-center justify-center py-6">
             <div className="card flex-none w-full max-w-6xl shadow-2xl bg-base-200">
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
                         {/* 4 columns */}
-                        <div className="grid grid-cols-4 gap-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-2">
                             
                             {/* COLUMN 1 */}
                             <div className="flex flex-col">
@@ -492,7 +492,7 @@ const AddService = () => {
                     </form>
                     {/* Success message */}
                     {showSuccess && (
-                    <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
+                    <div className="fixed top-6 left-1/2 transform -translate-x-1/2 max-w-[90vw] bg-green-100 text-green-800 border border-green-300 rounded px-6 py-3 shadow-lg z-50">
                         ✅ Service added successfully!
                     </div>
                     )}
